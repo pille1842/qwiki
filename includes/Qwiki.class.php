@@ -281,7 +281,7 @@ class Qwiki {
         $edittext = str_replace("~~~~", "--".$username." ".strftime("%c", $nowtime), $this->input['edittext']);
         if (!$info) {
             $this->update_page_info($page, $edittext, $now, $ipaddr);
-            $info = array('pagename' => $page, 'content' => $edittext, 'modified_at' => $now, 'modified_by' => $ipaddr);
+            $info = array('pagename' => $page, 'content' => '', 'modified_at' => $now, 'modified_by' => $ipaddr);
         }
         if ($info['content'] != $edittext) {
             if ($ipaddr != $info['modified_by']) {
