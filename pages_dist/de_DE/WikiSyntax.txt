@@ -1,0 +1,68 @@
+Auf dieser Seite wird die Syntax erläutert, die auf Seiten dieses Wikis zum Einsatz kommt.
+
+== Inline-Textformatierung ==
+^^ Zweck                       ^^ Code                                                             ^^ Ergebnis
+|| Fettschrift                 || ''<nowiki>**Lorem ipsum dolor sit amet.**</nowiki>''             || **Lorem ipsum dolor sit amet.**
+|| Kursivschrift               || ''<nowiki>//Lorem ipsum dolor sit amet.//</nowiki>''             || //Lorem ipsum dolor sit amet.//
+|| Unterstreichung             || ''<nowiki>__Lorem ipsum dolor sit amet.__</nowiki>''             || __Lorem ipsum dolor sit amet.__
+|| Durchstreichung             || ''<nowiki>--Lorem ipsum dolor sit amet.--</nowiki>''             || --Lorem ipsum dolor sit amet.--
+|| Monospace-Schrift           || ''<nowiki>''Lorem ipsum dolor sit amet.''</nowiki>''             || ''Lorem ipsum dolor sit amet.''
+|| E-Mail-Adressen verlinken   || ''<nowiki>test@example.com</nowiki>''                            || test@example.com
+|| URLs verlinken              || ''<nowiki>http://de.wikipedia.org</nowiki>''                     || http://de.wikipedia.org
+|| Bilder einbinden            || ''<nowiki>http://torsun.blogsport.de/images/schrei.gif</nowiki>''|| http://torsun.blogsport.de/images/schrei.gif
+|| Seiten verlinken            || ''<nowiki>QwikiSoftware</nowiki>''                               || QwikiSoftware
+|| Seitenlinks um Text ergänzen|| ''<nowiki>eines PasswortSpeicher''''''s</nowiki>''               || eines PasswortSpeicher''''''s
+|| YouTube-Videos einbetten    || ''<nowiki>https://www.youtube.com/watch?v=60og9gwKh1o</nowiki>'' || https://www.youtube.com/watch?v=60og9gwKh1o
+|| Überschriften               || ''<nowiki>== Überschrift 2 ==</nowiki>''                         || == Überschrift 2 == 
+||                             || ''<nowiki>=== Überschrift 3 ===</nowiki>''                       || === Überschrift 3 ===
+||                             || ''<nowiki>==== Überschrift 4 ====</nowiki>''                     || ==== Überschrift 4 ====
+||                             || ''<nowiki>===== Überschrift 5 =====</nowiki>''                   || ===== Überschrift 5 =====
+|| ISBN-Suche                  || ''<nowiki>ISBN 9783453146976</nowiki>''                          || ISBN 9783453146976
+
+== Tabellen ==
+Der folgende Code ergibt die nachstehende Tabelle:
+ <nowiki>
+^^ Spalte 1               ^^ Spalte 2               ^^ Spalte 3
+|| Zelle 1                || Zelle 2                || Zelle 3
+|| Zelle 4                || Zelle 5                || Zelle 6</nowiki>
+
+^^ Spalte 1               ^^ Spalte 2               ^^ Spalte 3
+|| Zelle 1                || Zelle 2                || Zelle 3
+|| Zelle 4                || Zelle 5                || Zelle 6
+
+== Listen ==
+
+ <nowiki>
+* Listenpunkt
+** Unterpunkt 1
+*** Unterpunkt 1.1
+
+# Listenpunkt
+## Unterpunkt 1
+### Unterpunkt 1.1</nowiki>
+
+* Listenpunkt
+** Unterpunkt 1
+*** Unterpunkt 1.1
+
+# Listenpunkt
+## Unterpunkt 1
+### Unterpunkt 1.1
+
+== Codeblöcke ==
+
+Ein oder mehrere Leerzeichen am Anfang einer Zeile sorgen dafür, dass der Text in einer Monospace-Schrift in einer grauen Box dargestellt wird.
+
+ <nowiki>
+Das hier wird normal angezeigt.
+ Das hier befindet sich in einer grauen Box.</nowiki>
+
+Das hier wird normal angezeigt.
+ Das hier befindet sich in einer grauen Box.
+
+== Trennlinien ==
+
+Vier oder mehr Striche am Anfang einer Zeile ergeben eine horizontale Linie.
+ <nowiki>----</nowiki>
+
+----

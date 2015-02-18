@@ -1,0 +1,1 @@
+{#thank_you_for_editing_pre#} <a href="{$smarty.const.QWIKI_DOCROOT}{$page}">{$page}</a> {#thank_you_for_editing_post#}

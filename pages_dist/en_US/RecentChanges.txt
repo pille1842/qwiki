@@ -1,0 +1,7 @@
+This page contains a log of all changes made to this wiki. A change is only logged here when the new version of a page differs from the old one, and when the IP address of the editor differs from the previous editor's IP address. This is a measure to protect this page against spam.
+
+If you want a custom username to appear in the log instead of plain IP addresses, use the following form to set your username. It will be stored on your computer as a cookie.
+
+QWIKI_SETUSERNAME
+
+The log is amended by adding lines to this page. You can change the upper parts of this page to your liking, for example introducing separators for years and months.

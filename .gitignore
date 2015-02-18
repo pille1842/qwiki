@@ -1,4 +1,3 @@
-pages/*
-backup/*
-*.log
 *~
+*.tpl.php
+*.conf.php

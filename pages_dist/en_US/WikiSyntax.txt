@@ -1,0 +1,71 @@
+This page explains the syntax used for writing pages in this Wiki.
+
+== Inline text-formatting ==
+
+^^ Purpose                       ^^ Code                                                             ^^ Result
+|| Bold text                     || ''<nowiki>**Lorem ipsum dolor sit amet.**</nowiki>''             || **Lorem ipsum dolor sit amet.**
+|| Italics                       || ''<nowiki>//Lorem ipsum dolor sit amet.//</nowiki>''             || //Lorem ipsum dolor sit amet.//
+|| Underline                     || ''<nowiki>__Lorem ipsum dolor sit amet.__</nowiki>''             || __Lorem ipsum dolor sit amet.__
+|| Strike-through                || ''<nowiki>--Lorem ipsum dolor sit amet.--</nowiki>''             || --Lorem ipsum dolor sit amet.--
+|| Monospace font                || ''<nowiki>''Lorem ipsum dolor sit amet.''</nowiki>''             || ''Lorem ipsum dolor sit amet.''
+|| Link e-Mail addresses         || ''<nowiki>test@example.com</nowiki>''                            || test@example.com
+|| Link URLs                     || ''<nowiki>http://en.wikipedia.org</nowiki>''                     || http://en.wikipedia.org
+|| Include images                || ''<nowiki>http://torsun.blogsport.de/images/schrei.gif</nowiki>''|| http://torsun.blogsport.de/images/schrei.gif
+|| Link to wiki pages            || ''<nowiki>WikiSandbox  </nowiki>''                               || WikiSandbox
+|| Add suffixes to page links    || ''<nowiki>the FrontPage''''''s</nowiki>''                        || The FrontPage''''''s
+|| Embed You''''''Tube videos    || ''<nowiki>https://www.youtube.com/watch?v=60og9gwKh1o</nowiki>'' || https://www.youtube.com/watch?v=60og9gwKh1o
+|| Headings                      || ''<nowiki>== Heading 2 ==</nowiki>''                             || == Heading 2 == 
+||                               || ''<nowiki>=== Heading 3 ===</nowiki>''                           || === Heading 3 ===
+||                               || ''<nowiki>==== Heading 4 ====</nowiki>''                         || ==== Heading 4 ====
+||                               || ''<nowiki>===== Heading 5 =====</nowiki>''                       || ===== Heading 5 =====
+|| ISBN search                   || ''<nowiki>ISBN 9783453146976</nowiki>''                          || ISBN 9783453146976
+
+== Tables ==
+
+The following code results in this table:
+
+ <nowiki>
+^^ Column 1               ^^ Column 2               ^^ Column 3
+|| Cell 1                 || Cell 2                 || Cell 3
+|| Cell 4                 || Cell 5                 || Cell 6</nowiki>
+
+^^ Column 1               ^^ Column 2               ^^ Column 3
+|| Cell 1                 || Cell 2                 || Cell 3
+|| Cell 4                 || Cell 5                 || Cell 6
+
+== Lists ==
+
+ <nowiki>
+* List item 1
+** List item 1.1
+*** List item 1.1.1
+
+# List item 1
+## List item 1.1
+### List item 1.1.1</nowiki>
+
+* List item 1
+** List item 1.1
+*** List item 1.1.1
+
+# List item 1
+## List item 1.1
+### List item 1.1.1
+
+== Code blocks ==
+
+One or more spaces at the beginning of a line will result in that text being displayed with a monospace font in a grey box.
+
+ <nowiki>
+This will be displayed the normal way.
+ This will be displayed in a grey box.</nowiki>
+
+This will be displayed the normal way.
+ This will be displayed in a grey box.
+
+== Horizontal lines ==
+
+Four or more dashes at the beginning of a line will make a horizontal line.
+ <nowiki>----</nowiki>
+
+----

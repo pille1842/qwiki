@@ -1,0 +1,1 @@
+This page may contain at a later point an explanation of what is considered good style in this wiki. Of course, that depends entirely on you and your community. At least this is probably considered good style anyways: Write readable, easy-to-understand pages and use WikiSyntax wisely.

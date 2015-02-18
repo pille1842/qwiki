@@ -1,0 +1,14 @@
+Du kannst die Seitentitel und Texte dieses Wikis mit der folgenden Suchmaschine durchsuchen. Gib einen Suchbegriff ein und klicke auf OK.
+
+QWIKI_SEARCH
+
+Einige Hinweise zur Suche:
+
+* ''Foo Bar'' findet Seiten, die sowohl Foo als auch Bar enthalten.
+* ''Foo -Bar'' findet Seiten, die zwar Foo, nicht aber Bar enthalten. Der Suchausdruck muss wenigstens einen positiven Suchausdruck enthalten, sonst wird die Suche zu einer Fehlermeldung führen.
+* ''Foo OR Bar'' findet Seiten, die entweder Foo oder Bar (oder beide) enthalten.
+* ''"Foo Bar"'' (mit Anführungszeichen) findet Seiten, die "Foo Bar" in genau dieser Kombination enthalten.
+* ''Foo pagename:Bar*'' findet Seiten, die Foo enthalten und deren Name (Seitentitel) mit Bar beginnt.
+* ''Foo* Bar'' findet Seiten, die Bar enthalten und wenigstens ein Wort, das mit Foo beginnt.
+
+Bei der Suche wird jeweils auch der Seitentitel durchsucht. Diese Seite kannst du zum Beispiel finden, indem du als Suchbegriff ''Find'' verwendest. Du kannst für die Titelsuche auch SQL-Platzhalter wie % (beliebig viele Zeichen) und ? (genau ein Zeichen) verwenden.

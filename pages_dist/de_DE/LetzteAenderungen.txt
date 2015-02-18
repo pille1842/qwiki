@@ -1,0 +1,7 @@
+Diese Seite enthält ein Protokoll aller Änderungen, die an diesem Wiki vorgenommen werden. Eine Änderung wird nur protokolliert, wenn sich die neue Version einer Seite von der alten unterscheidet und wenn die IP-Adresse des Bearbeiters nicht mit der IP-Adresse des vorherigen Bearbeiters übereinstimmt (Spamschutz-Maßnahme).
+
+Wenn du möchtest, dass statt der IP-Adresse des Bearbeiters ein von ihm gewählter Benutzername angezeigt wird, dann verwende das folgende Formular, um deinen Benutzernamen zu setzen. Er wird als Cookie auf deinem Rechner gespeichert.
+
+QWIKI_SETUSERNAME
+
+Das Protokoll wird geführt, indem an diese Seite unten Zeilen angehängt werden. Du kannst die oberen Teile der Seite bearbeiten wie du möchtest und beispielsweise eine Unterteilung in Jahre und Monate einfügen.

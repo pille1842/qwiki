@@ -4,7 +4,7 @@
  * @package Qwiki
  * @copyright 2015 Eric Haberstroh
  * @author Eric Haberstroh <eric@erixpage.de>
- * @version 0.3
+ * @version 1.0
  */
 /*  This file is part of Qwiki by Eric Haberstroh <eric@erixpage.de>.
     
@@ -77,27 +77,27 @@ class WikiParser {
     public function parseBytewise($cell) {
         $cell = trim($cell);
         $cell = $this->replaceSpecialChars($cell);
+        // find CamelCase words and replace them with the return value of the CamelCase function
+        $cell = preg_replace_callback('/([A-Z][a-z]+){2,}/', $this->camelCaseFunction, $cell);
+        // replace six consecutive apostrophes with nothing
+        $cell = str_replace("''''''", "", $cell);
         // bold (**Text**)
-        $cell = preg_replace('/\*\*([^\*]+)\*\*/', '<b>$1</b>', $cell);
+        $cell = preg_replace('/\*\*(.+?)\*\*/', '<b>$1</b>', $cell);
         // italics (//Text//)
-        $cell = preg_replace('/\/\/([^\/]+)\/\//', '<i>$1</i>', $cell);
+        $cell = preg_replace('/\/\/(.+?)\/\//', '<i>$1</i>', $cell);
         // underline (__Text__)
-        $cell = preg_replace('/\_\_([^\_]+)\_\_/', '<u>$1</u>', $cell);
+        $cell = preg_replace('/\_\_(.+?)\_\_/', '<u>$1</u>', $cell);
         // strike-through (--Text--)
-        $cell = preg_replace('/\-\-([^\-]+)\-\-/', '<del>$1</del>', $cell);
+        $cell = preg_replace('/\-\-(.+?)\-\-/', '<del>$1</del>', $cell);
         // replace eMail addresses with their mailto: link
         $cell = preg_replace('/(\S+@\S+\.\S+)/', '<a href="mailto:$1">$1</a>', $cell);
         // use monospace font (''Text'')
-        $cell = preg_replace('/\'\'([^\']+)\'\'/', '<tt>$1</tt>', $cell);
+        $cell = preg_replace('/\'\'(.+?)\'\'/', '<tt>$1</tt>', $cell);
         // headings (H2-H5)
-        $cell = preg_replace('/\=\=\=\=\=(.+)\=\=\=\=\=/', '<h5>$1</h5>', $cell);
-        $cell = preg_replace('/\=\=\=\=(.+)\=\=\=\=/', '<h4>$1</h4>', $cell);
-        $cell = preg_replace('/\=\=\=(.+)\=\=\=/', '<h3>$1</h3>', $cell);
-        $cell = preg_replace('/\=\=(.+)\=\=/', '<h2>$1</h2>', $cell);
-        // find CamelCase words and replace them with the return value of the CamelCase function
-        $cell = preg_replace_callback('/([A-Z][a-z]+){2,}/', $this->camelCaseFunction, $cell);
-        // replace 6 consecutive single quotes with an empty string to enable merging CamelCase links with prefixes and suffixes
-        $cell = str_replace("''''''", "", $cell);
+        $cell = preg_replace('/\=\=\=\=\=(.+?)\=\=\=\=\=/', '<h5>$1</h5>', $cell);
+        $cell = preg_replace('/\=\=\=\=(.+?)\=\=\=\=/', '<h4>$1</h4>', $cell);
+        $cell = preg_replace('/\=\=\=(.+?)\=\=\=/', '<h3>$1</h3>', $cell);
+        $cell = preg_replace('/\=\=(.+?)\=\=/', '<h2>$1</h2>', $cell);
         return $cell;
     }
     
@@ -136,8 +136,8 @@ class WikiParser {
                 }
             }
         }
-        // replace ISBNs by Amazon links
-        $op = preg_replace('/[ISBN]{4}[ ]{0,1}([0-9]{10,13})/', '<a href="http://www.amazon.de/gp/search/?field-isbn=$1">$0</a>', $op);
+        // replace ISBNs by search links (see configuration)
+        $op = preg_replace('/[ISBN]{4}[ ]{0,1}([0-9]{10,13})/', '<a href="'.QWIKI_ISBN_SEARCH.'">$0</a>', $op);
         // reinsert <nowiki> blocks
         if (!empty($this->arrNowiki)) {
             foreach ($this->arrNowiki as $md5 => $nowiki) {

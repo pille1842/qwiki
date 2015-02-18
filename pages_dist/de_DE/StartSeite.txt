@@ -1,0 +1,10 @@
+Willkommen in deiner neuen Qwiki-Installation! Die Tatsache, dass du diese Seite sehen kannst, ist wahrscheinlich ein gutes Zeichen. Du kannst jetzt damit anfangen, die Seiten deines Wikis zu bearbeiten. Klicke dazu unten auf dieser oder jeder anderen Seite auf den Link "Seite''''''Bearbeiten".
+
+Ein paar Einstiegspunkte:
+
+* WikiSyntax erläutert die Syntax, mit der du Seiten verfassen musst.
+* LetzteAenderungen wird ein Protokoll aller Änderungen enthalten, die du an diesem Wiki vornimmst.
+* Auf SeiteFinden kannst du den Inhalt dieses Wikis durchsuchen.
+* Im WikiSandkasten kannst du dein neu erlerntes Wissen ausprobieren und mit der Syntax herumexperimentieren.
+
+Besuche https://github.com/pille1842/qwiki für Neuigkeiten zu Qwiki.

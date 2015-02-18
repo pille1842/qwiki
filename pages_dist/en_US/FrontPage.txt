@@ -1,0 +1,10 @@
+Welcome to your new Qwiki installation! The fact that you can see this page is probably a good sign. You are now free to edit the pages of your new Wiki. To do so, click the Edit''''''Text link on this or any other page.
+
+Some good starting points:
+
+* WikiSyntax explains the syntax used to write pages in this Wiki.
+* RecentChanges will contain a log of all changes you make to this Wiki.
+* With FindPage you can search the contents of this wiki.
+* You can try out the syntax at WikiSandbox.
+
+Visit https://github.com/pille1842/qwiki for news about Qwiki.

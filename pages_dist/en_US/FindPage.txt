@@ -1,0 +1,14 @@
+You can search the contents of this wiki by using the following search engine. Enter your search terms and click OK.
+
+QWIKI_SEARCH
+
+Some hints:
+
+* ''Foo Bar'' will find pages that contain both Foo and Bar.
+* ''Foo -Bar'' will find pages that contain Foo, but not Bar. You have to use at least one positive search term, otherwise the search will fail with an error message.
+* ''Foo OR Bar'' will find pages that contain either Foo or Bar (or both of them).
+* ''"Foo Bar"'' (with quotation marks) will find pages that contain Foo Bar in that exact order.
+* ''Foo pagename:Bar*'' will find pages with a title beginning with Bar and containing Foo.
+* ''Foo* Bar'' will find pages that contain bar and at least one word beginning with Foo.
+
+The search always incorporates page titles. For example, you can find this page by using the search term ''Find''. You can also use SQL placeholders for the title search: % for any number of characters, ? for exactly one character.
