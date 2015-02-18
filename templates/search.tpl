@@ -7,4 +7,4 @@
 {/foreach}
 </ol>
 <hr>
-{#pages_found#}: {$index|@count}
+{#pages_found#}: {$results|@count}
