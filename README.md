@@ -27,7 +27,8 @@ the fulltext index is generated.
 ## Initial set of pages
 
 Initially, the Qwiki distribution comes with several pages:
-* HomePage, which is just what it says.
+* FrontPage, which is just what it says and the default page that is loaded when
+  you visit your wiki.
 * PageNotFound, which is displayed when you try to view a page that doesn't
   exist (Error 404).
 * FindPage, which contains the search forms for title and full-text search and
