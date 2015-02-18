@@ -433,7 +433,7 @@ class Qwiki {
         if (!$f) {
             throw new QwikiException("File handle for $rcpage couldn't be created.", QWIKI_ERR_FILE);
         }
-        $newrc = $oldrc."\n* $date: $page ($username)";
+        $newrc = $oldrc."* $date: $page ($username)\n";
         $result = @fwrite($f, $newrc);
         if (!$result) {
             throw new QwikiException("Contents could not be written to $rcpage file.", QWIKI_ERR_FILE);

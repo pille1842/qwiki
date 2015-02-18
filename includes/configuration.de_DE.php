@@ -61,7 +61,7 @@ define('QWIKI_LOGO', QWIKI_DOCROOT.'images/logo.png');
 /**
  * Directory that contains pages files (has to be writable by webserver)
  */
-define('QWIKI_DIR_PAGES', QWIKI_DOCROOT.'pages/');
+define('QWIKI_DIR_PAGES', QWIKI_HTDOCS.'pages/');
 /**
  * Path to the index SQLite database file (has to be writable by webserver)
  */
