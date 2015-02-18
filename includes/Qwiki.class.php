@@ -361,7 +361,7 @@ class Qwiki {
         $parser = new WikiParser($this->page_wikitext($page), $this->camelcase_function);
         $result = $parser->parse();
         $result = str_replace("QWIKI_SEARCH", '<form method="post" action="'.QWIKI_DOCROOT.'index.php"><input type="text" name="term" value=""><button type="submit" name="action" value="search">OK</button></form>', $result);
-        $result = str_replace("QWIKI_SETUSERNAME", '<form method="post" action="'.QWIKI_DOCROOT.'index.php"><input type="text" name="username" value="'.$this->username.'"><button type="submit" name="action" value="setusername">OK</button></form>', $result);
+        $result = str_replace("QWIKI_SETUSERNAME", '<form method="post" action="'.QWIKI_DOCROOT.'index.php"><input type="text" name="username" value="'.$this->username.'"><button type="submit" name="action" value="setusername">OK</button><input type="hidden" name="page" value="'.$page.'"></form>', $result);
         return $result;
     }
     
