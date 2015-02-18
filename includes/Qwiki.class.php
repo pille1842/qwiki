@@ -238,6 +238,7 @@ class Qwiki {
                 $this->smarty->assign('content', $this->page_html($page));
             }
             $this->smarty->assign('pagemodtime', strftime("%c", Qwiki::page_mtime($page)));
+            $this->smarty->assign('backupexists', Qwiki::backup_exists($page));
         } else {
             $this->smarty->assign('template', 'view.tpl');
             $this->smarty->assign('title', Qwiki::expand_camelcase($page));
@@ -319,6 +320,12 @@ class Qwiki {
             $this->smarty->assign('title', Qwiki::expand_camelcase($page));
             $this->smarty->assign('page', $page);
             $this->smarty->assign('diff', $diff);
+            $this->smarty->display('index.tpl');
+        } elseif (Qwiki::page_exists($page) && !Qwiki::backup_exists($page)) {
+            $this->smarty->assign('template', 'diff.tpl');
+            $this->smarty->assign('title', Qwiki::expand_camelcase($page));
+            $this->smarty->assign('page', $page);
+            $this->smarty->assign('diff', "There is no backup version of $page yet.");
             $this->smarty->display('index.tpl');
         } else {
             $this->smarty->assign('error', 'nonexistent_files');
