@@ -197,12 +197,15 @@ class WikiParser {
         $olDepth = 0;
         // Depth of quote blocks
         $quoteDepth = 0;
+        // Are we in a paragraph?
+        $inParagraph = false;
         // Are we in a table?
         $inTable = false;
         // Are we in a codeblock?
         $inPre = false;
         // QwikiText exploded into array
         $arrSource = explode("\n", $op);
+        $arrSource[] = "\n";
         // Array of generated output lines
         $arrOutput = array();
         foreach ($arrSource as $l) {
@@ -211,6 +214,10 @@ class WikiParser {
             $o = "";
             // Unordered List
             if (preg_match('/^(\*)+ /', $l, $arrMatches)) {
+                if ($inParagraph) {
+                    $o .= "</p>";
+                    $inParagraph = false;
+                }
                 while (strlen(trim($arrMatches[0])) > $listDepth) {
                     $listDepth += 1;
                     $o .= "<ul>";
@@ -229,6 +236,10 @@ class WikiParser {
             }
             // Ordered List
             if (preg_match('/^(\#)+ /', $l, $arrMatches)) {
+                if ($inParagraph) {
+                    $o .= "</p>";
+                    $inParagraph = false;
+                }
                 while (strlen(trim($arrMatches[0])) > $olDepth) {
                     $olDepth += 1;
                     $o .= "<ol>";
@@ -246,6 +257,10 @@ class WikiParser {
                 }
             }
             if (preg_match('/^(\>)+/', $l, $arrMatches)) {
+                if ($inParagraph) {
+                    $o .= "</p>";
+                    $inParagraph = false;
+                }
                 while (strlen($arrMatches[0]) > $quoteDepth) {
                     $quoteDepth += 1;
                     $o .= '<div style="margin-left:10px;">';
@@ -264,6 +279,10 @@ class WikiParser {
             }
             // Table (normal row)
             if (preg_match('/^\|\|/', $l)) {
+                if ($inParagraph) {
+                    $o .= "</p>";
+                    $inParagraph = false;
+                }
                 if ($inTable == false) {
                     $o .= "<table>";
                     $inTable = true;
@@ -283,6 +302,10 @@ class WikiParser {
             }
             // Table (head row)
             if (preg_match('/^\^\^/', $l)) {
+                if ($inParagraph) {
+                    $o .= "</p>";
+                    $inParagraph = false;
+                }
                 if ($inTable == false) {
                     $o .= "<table>";
                     $inTable = true;
@@ -302,6 +325,10 @@ class WikiParser {
             }
             // Codeblock
             if (preg_match('/^( )+/', $l)) {
+                if ($inParagraph) {
+                    $o .= "</p>";
+                    $inParagraph = false;
+                }
                 if ($inPre) {
                     $o .= preg_replace('/^( )+/', '', $this->replaceSpecialChars($l));
                 } else {
@@ -317,19 +344,36 @@ class WikiParser {
             }
             // horizontal line (----)
             if (preg_match('/^(\-){4,}((.?)+)$/', $l, $match)) {
+                if ($inParagraph) {
+                    $o .= "</p>";
+                    $inParagraph = false;
+                }
                 $o .= "<hr>\n" . $this->parseBytewise($match[2]);
                 $handled = true;
             }
+            // everything else
             if (!$handled) {
-                $o .= $this->parseBytewise($l);
+                if (trim($l) != '') {
+                    if (!$inParagraph) {
+                        $o .= "<p>";
+                        $inParagraph = true;
+                    }
+                    $o .= $this->parseBytewise($l);
+                } else {
+                    if ($inParagraph) {
+                        $o .= "</p>";
+                        $inParagraph = false;
+                    }
+                }
             }
             // save output
             $arrOutput[] = $o;
         }
+        if ($inParagraph) {
+            $arrOutput[] = "</p>";
+            $inParagraph = false;
+        }
         $output = implode("\n", $arrOutput);
-        // insert paragraph delimiters and remove empty paragraphs
-        $output = preg_replace('/(\n){2,}/', '</p><p>', $output);
-        $output = str_replace("<p></p>", "", $output);
         return $output;
     }
 }
