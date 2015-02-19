@@ -25,14 +25,34 @@
 if (!defined('QWIKI_EXEC')) {
     die('Restricted');
 }
-
+/**
+ * This version of Qwiki
+ */
 define('QWIKI_VERSION', '2.0');
 
+/**
+ * This exception code is used when the constructor parameters are not
+ * given or are not arrays (as one would expect $_GET and $_POST to be).
+ */
 define('QWIKI_ERR_CONSTRUCTOR', 100);
+/**
+ * This exception code is used when an unknown action parameter is found
+ * in $get or $post.
+ */
 define('QWIKI_ERR_PARAMETER', 110);
+/**
+ * This exception code is used when anything goes wrong querying the database
+ * or reading/writing the database file.
+ */
 define('QWIKI_ERR_DB', 120);
+/**
+ * This error code is used when anything goes wrong with file I/O.
+ */
 define('QWIKI_ERR_FILE', 130);
 
+/**
+ * Various action definitions for internal usage
+ */
 define('QWIKI_ACTION_VIEW', 1);
 define('QWIKI_ACTION_EDIT', 2);
 define('QWIKI_ACTION_PREVIEW', 3);
@@ -41,15 +61,30 @@ define('QWIKI_ACTION_DIFF', 5);
 define('QWIKI_ACTION_SEARCH', 6);
 define('QWIKI_ACTION_SETUSERNAME', 7);
 
+/**
+ * Class definition: custom exception class
+ */
 class QwikiException extends Exception {
+    /**
+     * Class constructor (calls parent constructor)
+     * @param string Error message
+     * @param integer Error code
+     */
     public function __construct($message, $code = 0) {
         parent::__construct($message, $code);
     }
     
+    /**
+     * Custom function for transforming the exception into a string
+     * @return string The generated exception string
+     */
     public function __toString() {
         return __CLASS__ . ": [{$this->code}]: {$this->message}";
     }
     
+    /**
+     * Generate a basic HTML page to display the exception
+     */
     public function messagePage() {
         header('HTTP/1.0 500 Internal Server Error');
         echo '<!DOCTYPE html>'."\n"
@@ -67,25 +102,67 @@ class QwikiException extends Exception {
     }
 }
 
+/**
+ * Class definition: Main Qwiki class
+ */
 class Qwiki {
+    /**
+     * Array of input values from $get and $post ($post overrides $get)
+     * @var array
+     * @access protected
+     */
     protected $input = array();
+    /**
+     * Regular expression for handling CamelCase words
+     * @var string
+     * @access protected
+     */
     protected $regex_camelcase = '/([A-Z][a-z]+){2,}/';
+    /**
+     * Name of function to call for replacing CamelCase words by links
+     * @var string
+     * @access protected
+     */
     protected $camelcase_function = 'Qwiki::parse_camelcase';
+    /**
+     * Will contain the username when the appropriate cookie is set
+     * @var string
+     * @access protected
+     */
     protected $username = null;
+    /**
+     * Will contain the Smarty instance object
+     * @var object
+     * @access private
+     */
     private $smarty;
+    /**
+     * Will contain the database object
+     * @var object
+     * @access private
+     */
     private $db;
     
+    /**
+     * Class constructor
+     * @param array Array of $_GET values
+     * @param array Array of $_POST values
+     * @access public
+     */
     public function __construct($get, $post) {
+        // Check parameters
         if (is_array($get) && is_array($post)) {
             $this->input = array_merge($get, $post);
         } else {
             throw new QwikiException('Parameters $get and $post have to be arrays.', QWIKI_ERR_CONSTRUCTOR);
         }
+        // Create Smarty object and fill in some basic values
         $this->smarty = new QwikiSmarty();
         $this->smarty->assign('arrInput', $this->input);
         $this->smarty->assign('conffile', QWIKI_LOCALE.'.conf');
         $this->smarty->assign('logofile', QWIKI_LOGO);
         $this->smarty->assign('findpagename', QWIKI_FINDPAGE);
+        // Check the fulltext index and create it if necessary
         if (file_exists(QWIKI_INDEX_FILE) && is_writable(QWIKI_INDEX_FILE)) {
             $this->db = new SQLite3(QWIKI_INDEX_FILE);
             if (!$this->db) {
@@ -112,6 +189,7 @@ class Qwiki {
         } elseif (file_exists(QWIKI_INDEX_FILE) && !is_writable(QWIKI_INDEX_FILE)) {
             throw new QwikiException('Database file '.QWIKI_INDEX_FILE.' is not writable.', QWIKI_ERR_DB);
         }
+        // Check the username and set the appropriate variable
         if (isset($_COOKIE['qwiki_username']) && $_COOKIE['qwiki_username'] != '') {
             $this->username = $_COOKIE['qwiki_username'];
         } else {
@@ -120,6 +198,10 @@ class Qwiki {
         $this->smarty->assign('username', $this->username);
     }
     
+    /**
+     * Main function to display the site
+     * @access public
+     */
     public function run() {
         if (isset($this->input['action']) && $this->input['action'] != '') {
             switch ($this->input['action']) {
@@ -223,6 +305,12 @@ class Qwiki {
         }
     }
     
+    /**
+     * Action dispatcher: VIEW
+     * @param string Name of the page to display
+     * @param boolean If this is an error, the content of QWIKI_ERRORPAGE will be displayed
+     * @access private
+     */
     private function view($page, $error = false) {
         if (Qwiki::page_exists($page)) {
             $info = $this->page_info($page);
@@ -250,6 +338,11 @@ class Qwiki {
         $this->smarty->display('index.tpl');
     }
     
+    /**
+     * Action dispatcher: EDIT
+     * @param string Name of the page to edit
+     * @access private
+     */
     private function edit($page) {
         $this->smarty->assign('template', 'edit.tpl');
         $this->smarty->assign('title', Qwiki::expand_camelcase($page));
@@ -258,6 +351,11 @@ class Qwiki {
         $this->smarty->display('index.tpl');
     }
     
+    /**
+     * Action dispatcher: PREVIEW
+     * @param string Name of the page that is edited
+     * @access private
+     */
     private function preview($page) {
         $this->smarty->assign('template', 'edit.tpl');
         $this->smarty->assign('title', Qwiki::expand_camelcase($page));
@@ -268,6 +366,11 @@ class Qwiki {
         $this->smarty->display('index.tpl');
     }
     
+    /**
+     * Action dispatcher: SAVE
+     * @param string Name of the page to save
+     * @access private
+     */
     private function save($page) {
         $info = $this->page_info($page);
         $now = date("Y-m-d H:i:s");
@@ -313,6 +416,11 @@ class Qwiki {
         $this->smarty->display('index.tpl');
     }
     
+    /**
+     * Action dispatcher: DIFF
+     * @param string Name of the page to display a quickdiff of
+     * @access private
+     */
     private function diff($page) {
         if (Qwiki::page_exists($page) && Qwiki::backup_exists($page)) {
             $diff = Diff::toTable(Diff::compareFiles(Qwiki::page_backupname($page), Qwiki::page_filename($page)));
@@ -333,6 +441,11 @@ class Qwiki {
         }
     }
     
+    /**
+     * Action dispatcher: SEARCH
+     * @param string Term to search the database for
+     * @access private
+     */
     private function search($term) {
         $term = $this->db->escapeString($term);
         $index = array();
@@ -357,6 +470,12 @@ class Qwiki {
         $this->smarty->display('index.tpl');
     }
     
+    /**
+     * Action dispatcher: SETUSERNAME
+     * @param string Username to set
+     * @param string Page to display afterwards
+     * @access private
+     */
     private function setusername($username, $page) {
         @setcookie(QWIKI_COOKIE_NAME, $username, time()+QWIKI_COOKIE_EXPIRE);
         $this->username = $username;
@@ -364,6 +483,12 @@ class Qwiki {
         $this->view($page);
     }
     
+    /**
+     * Generate HTML code of the given page
+     * @param string Page name
+     * @return string HTML code
+     * @access private
+     */
     private function page_html($page) {
         $parser = new WikiParser($this->page_wikitext($page), $this->camelcase_function);
         $result = $parser->parse();
@@ -372,6 +497,12 @@ class Qwiki {
         return $result;
     }
     
+    /**
+     * Get source text of the given page
+     * @param string Page name
+     * @return string Source text (QwikiText)
+     * @access private
+     */
     private function page_wikitext($page) {
         $filename = Qwiki::page_filename($page);
         if (file_exists($filename)) {
@@ -381,6 +512,12 @@ class Qwiki {
         }
     }
     
+    /**
+     * Get source text of the backup file of the given page
+     * @param string Page name
+     * @return string Content of the backup file (empty string if no backup exists)
+     * @access private
+     */
     private function page_backuptext($page) {
         $filename = Qwiki::page_backupname($page);
         if (file_exists($filename)) {
@@ -390,6 +527,12 @@ class Qwiki {
         }
     }
     
+    /**
+     * Get information about the given page from the database
+     * @param string Page name
+     * @return mixed Array of values or false if the entry does not exist in the database
+     * @access private
+     */
     private function page_info($page) {
         $page = $this->db->escapeString($page);
         $result = $this->db->query("SELECT pagename, content, modified_at, modified_by FROM qwiki_index WHERE pagename = '$page'");
@@ -399,6 +542,14 @@ class Qwiki {
         return $result->fetchArray();
     }
     
+    /**
+     * Update page information in the database
+     * @param string Page name
+     * @param string Content of the page
+     * @param string Date and time of last modification in SQL-apt format
+     * @param string IP address of the modifier in dot notation
+     * @access private
+     */
     private function update_page_info($page, $content, $modified_at, $modified_by) {
         $page = $this->db->escapeString($page);
         $content = $this->db->escapeString($content);
@@ -417,6 +568,10 @@ class Qwiki {
         }
     }
     
+    /**
+     * Rebuild complete index from the files in the QWIKI_DIR_PAGES directory
+     * @access private
+     */
     private function rebuild_index() {
         $dirh = @opendir(QWIKI_DIR_PAGES);
         if (!$dirh) {
@@ -433,6 +588,13 @@ class Qwiki {
         @closedir($dirh);
     }
     
+    /**
+     * Add a new line to QWIKI_RECENTCHANGES (usually called by Qwiki::save())
+     * @param string Page name
+     * @param string Date and time (already formatted)
+     * @param string Name of the user or IP address
+     * @access private
+     */
     private function update_recentchanges($page, $date, $username) {
         $rcpage = QWIKI_RECENTCHANGES;
         $oldrc = $this->page_wikitext($rcpage);
@@ -448,30 +610,72 @@ class Qwiki {
         @fclose($f);
     }
     
+    /**
+     * Check if a page exists on disk
+     * @param string Page name
+     * @return boolean
+     * @access public
+     */
     public static function page_exists($page) {
         return file_exists(Qwiki::page_filename($page));
     }
     
+    /**
+     * Check if a backup file for the given page exists
+     * @param string Page name
+     * @return boolean
+     * @access public
+     */
     public static function backup_exists($page) {
         return file_exists(Qwiki::page_backupname($page));
     }
     
+    /**
+     * Get the modification timestamp for the given page
+     * @param string Page name
+     * @return integer Timestamp
+     * @access public
+     */
     public static function page_mtime($page) {
         return filemtime(Qwiki::page_filename($page));
     }
     
+    /**
+     * Get the full path to the given page
+     * @param string Page name
+     * @return string Path
+     * @access public
+     */
     public static function page_filename($page) {
         return QWIKI_DIR_PAGES . $page . '.txt';
     }
     
+    /**
+     * Extract the page name from a file name by subtracting the last 4 characters (.txt)
+     * @param string Filename
+     * @return string Page name
+     * @access public
+     */
     public static function file_pagename($file) {
         return substr($file, 0, -4);
     }
     
+    /**
+     * Get the full path to the backup file of the given page
+     * @param string Page name
+     * @return string Path
+     * @access public
+     */
     public static function page_backupname($page) {
         return Qwiki::page_filename($page) . '~';
     }
     
+    /**
+     * Transform CamelCase words to links (called via preg_replace_callback by WikiParser)
+     * @param array Array of matches (only first value is evaluated)
+     * @return string Link to the page (or to the EditText form of that page if it doesn't exist)
+     * @access public
+     */
     public static function parse_camelcase($match) {
         $w = $match[0];
         if (Qwiki::page_exists($w)) {
@@ -482,6 +686,12 @@ class Qwiki {
         return $ret;
     }
     
+    /**
+     * Expand CamelCase words for displaying in headings (CamelCaseWord => Camel Case Word)
+     * @param string CamelCase word
+     * @return string expanded word
+     * @access public
+     */
     public static function expand_camelcase($word) {
         return preg_replace("/(([a-z])([A-Z])|([A-Z])([A-Z][a-z]))/","\\2\\4 \\3\\5", $word);
     }
