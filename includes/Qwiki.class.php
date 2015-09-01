@@ -28,7 +28,7 @@ if (!defined('QWIKI_EXEC')) {
 /**
  * This version of Qwiki
  */
-define('QWIKI_VERSION', '2.0');
+define('QWIKI_VERSION', '2.0.1');
 
 /**
  * This exception code is used when the constructor parameters are not
@@ -168,7 +168,7 @@ class Qwiki {
             if (!$this->db) {
                 throw new QwikiException('Error creating database handle for '.QWIKI_INDEX_FILE.'.', QWIKI_ERR_DB);
             }
-            $result = $this->db->exec("CREATE VIRTUAL TABLE IF NOT EXISTS qwiki_index USING fts3(pagename VARCHAR(255) NOT NULL, content TEXT, modified_at DATETIME, modified_by VARCHAR(15))");
+            $result = $this->db->exec("CREATE VIRTUAL TABLE IF NOT EXISTS qwiki_index USING fts3(pagename VARCHAR(255) NOT NULL, content TEXT, modified_at DATETIME, modified_by VARCHAR(15), username VARCHAR(100) DEFAULT '')");
             if (!$result) {
                 throw new QwikiException('Error creating nonexisting qwiki_index table in database file '.QWIKI_INDEX_FILE.'.', QWIKI_ERR_DB);
             }
@@ -181,7 +181,7 @@ class Qwiki {
             if (!$this->db) {
                 throw new QwikiException('Error creating database handle for '.QWIKI_INDEX_FILE.'.', QWIKI_ERR_DB);
             }
-            $result = $this->db->exec("CREATE VIRTUAL TABLE IF NOT EXISTS qwiki_index USING fts3(pagename VARCHAR(255) NOT NULL, content TEXT, modified_at DATETIME, modified_by VARCHAR(15))");
+            $result = $this->db->exec("CREATE VIRTUAL TABLE IF NOT EXISTS qwiki_index USING fts3(pagename VARCHAR(255) NOT NULL, content TEXT, modified_at DATETIME, modified_by VARCHAR(15), username VARCHAR(100) DEFAULT '')");
             if (!$result) {
                 throw new QwikiException('Error creating nonexisting qwiki_index table in database file '.QWIKI_INDEX_FILE.'.', QWIKI_ERR_DB);
             }
@@ -315,7 +315,7 @@ class Qwiki {
         if (Qwiki::page_exists($page)) {
             $info = $this->page_info($page);
             if (!$info) {
-                $this->update_page_info($page, $this->page_wikitext($page), $this->page_mtime($page), '');
+                $this->update_page_info($page, $this->page_wikitext($page), $this->page_mtime($page), '', '');
             }
             $this->smarty->assign('template', 'view.tpl');
             $this->smarty->assign('title', Qwiki::expand_camelcase($page));
@@ -360,8 +360,16 @@ class Qwiki {
         $this->smarty->assign('template', 'edit.tpl');
         $this->smarty->assign('title', Qwiki::expand_camelcase($page));
         $this->smarty->assign('page', $page);
-        $this->smarty->assign('edittext', $this->input['edittext']);
-        $parser = new WikiParser($this->input['edittext'], $this->camelcase_function);
+        $edittext = $this->input['edittext'];
+        $nowtime = time();
+        $ipaddr = $_SERVER['REMOTE_ADDR'];
+        $username = $this->username;
+        // Replace four tildes (~~~~) by username and timestamp
+        $previewtext = str_replace("~~~~", $username." ".strftime("%c", $nowtime), $edittext);
+        // Replace two tildes (~~) by username
+        $previewtext = str_replace("~~", $username, $previewtext);
+        $this->smarty->assign('edittext', $edittext);
+        $parser = new WikiParser($previewtext, $this->camelcase_function);
         $this->smarty->assign('preview', $parser->parse());
         $this->smarty->display('index.tpl');
     }
@@ -373,18 +381,16 @@ class Qwiki {
      */
     private function save($page) {
         $info = $this->page_info($page);
-        $now = date("Y-m-d H:i:s");
         $nowtime = time();
         $ipaddr = $_SERVER['REMOTE_ADDR'];
-        if ($this->username != '') {
-            $username = $this->username;
-        } else {
-            $username = $ipaddr;
-        }
-        $edittext = str_replace("~~~~", "--".$username." ".strftime("%c", $nowtime), $this->input['edittext']);
+        $username = $this->username;
+        // Replace four tildes (~~~~) by username and timestamp
+        $edittext = str_replace("~~~~", $username." ".strftime("%c", $nowtime), $this->input['edittext']);
+        // Replace two tildes (~~) by username
+        $edittext = str_replace("~~", $username, $edittext);
         if (!$info) {
-            $this->update_page_info($page, $edittext, $now, $ipaddr);
-            $info = array('pagename' => $page, 'content' => '', 'modified_at' => $now, 'modified_by' => $ipaddr);
+            $this->update_page_info($page, $edittext, $nowtime, $ipaddr, $username);
+            $info = array('pagename' => $page, 'content' => '', 'modified_at' => date("Y-m-d H:i:s", $nowtime), 'modified_by' => $ipaddr, 'username' => '');
         }
         if ($info['content'] != $edittext) {
             if ($ipaddr != $info['modified_by']) {
@@ -397,7 +403,6 @@ class Qwiki {
                     throw new QwikiException("Error writing contents of $page to backup file.", QWIKI_ERR_FILE);
                 }
                 @fclose($f);
-                $this->update_recentchanges($page, strftime("%c", $nowtime), $username);
             }
             $f = @fopen($this->page_filename($page), 'w');
             if (!$f) {
@@ -408,7 +413,14 @@ class Qwiki {
                 throw new QwikiException("Error writing contents of $page to file.", QWIKI_ERR_FILE);
             }
             @fclose($f);
-            $this->update_page_info($page, $edittext, $now, $ipaddr);
+            $this->update_page_info($page, $edittext, $nowtime, $ipaddr, $username);
+        }
+        if ($this->page_wikitext($page) == "delete" && $this->page_backuptext($page) == "delete") {
+            // Page file as well as backup file only contain the word "delete". Confirm this delete and remove
+            // the page from the pages directory and index.
+            @unlink($this->page_filename($page));
+            @unlink($this->page_backupname($page));
+            $this->remove_page_info($page);
         }
         $this->smarty->assign('template', 'save.tpl');
         $this->smarty->assign('title', Qwiki::expand_camelcase($page));
@@ -461,13 +473,31 @@ class Qwiki {
             throw new QwikiException('The given search term resulted in a database error.', QWIKI_ERR_DB);
         }
         while ($row = $result->fetchArray()) {
-            $index[$row['pagename']] = $row['sn'];
+            $index[$row['pagename']] = $this->sanitize_snippet($row['sn']);
         }
+        ksort($index);
         $this->smarty->assign('template', 'search.tpl');
-        $this->smarty->assign('title', Qwiki::expand_camelcase(QWIKI_FINDPAGE));
+        $this->smarty->assign('title', Qwiki::expand_camelcase(QWIKI_FINDPAGE).": ".$term);
         $this->smarty->assign('page', QWIKI_FINDPAGE);
         $this->smarty->assign('results', $index);
         $this->smarty->display('index.tpl');
+    }
+    
+    /**
+     * Remove any HTML special characters from FTS3 snippets except "bold" tags inserted by FTS3
+     * @param string snippet
+     * @return string sanitized snippet
+     * @access private
+     */
+    private function sanitize_snippet($snippet) {
+        $snippet = str_replace("[[TAG_BOLD]]", "&#91;&#91;TAG_BOLD&#93;&#93;", $snippet);
+        $snippet = str_replace("[[/TAG_BOLD]]", "&#91;&#91;/TAG_BOLD&#93;&#93;", $snippet);
+        $snippet = str_replace("<b>", "[[TAG_BOLD]]", $snippet);
+        $snippet = str_replace("</b>", "[[/TAG_BOLD]]", $snippet);
+        $snippet = htmlspecialchars($snippet);
+        $snippet = str_replace("[[TAG_BOLD]]", "<b>", $snippet);
+        $snippet = str_replace("[[/TAG_BOLD]]", "</b>", $snippet);
+        return $snippet;
     }
     
     /**
@@ -492,8 +522,9 @@ class Qwiki {
     private function page_html($page) {
         $parser = new WikiParser($this->page_wikitext($page), $this->camelcase_function);
         $result = $parser->parse();
-        $result = str_replace("QWIKI_SEARCH", '<form method="post" action="'.QWIKI_DOCROOT.'index.php"><input type="text" name="term" value=""><button type="submit" name="action" value="search">OK</button></form>', $result);
-        $result = str_replace("QWIKI_SETUSERNAME", '<form method="post" action="'.QWIKI_DOCROOT.'index.php"><input type="text" name="username" value="'.$this->username.'"><button type="submit" name="action" value="setusername">OK</button><input type="hidden" name="page" value="'.$page.'"></form>', $result);
+        $result = str_replace("%%QWIKI_SEARCH%%", '<form method="post" action="'.QWIKI_DOCROOT.'index.php"><input type="text" name="term" value=""><button type="submit" name="action" value="search">OK</button></form>', $result);
+        $result = str_replace("%%QWIKI_SETUSERNAME%%", '<form method="post" action="'.QWIKI_DOCROOT.'index.php"><input type="text" name="username" value="'.$this->username.'"><button type="submit" name="action" value="setusername">OK</button><input type="hidden" name="page" value="'.$page.'"></form>', $result);
+        $result = str_replace("%%QWIKI_RECENTCHANGES%%", $this->generate_recentchanges(), $result);
         return $result;
     }
     
@@ -550,21 +581,30 @@ class Qwiki {
      * @param string IP address of the modifier in dot notation
      * @access private
      */
-    private function update_page_info($page, $content, $modified_at, $modified_by) {
+    private function update_page_info($page, $content, $modified_at, $modified_by, $username) {
         $page = $this->db->escapeString($page);
         $content = $this->db->escapeString($content);
-        $modified_at = $this->db->escapeString($modified_at);
+        $modified_at = $this->db->escapeString(date("Y-m-d H:i:s", $modified_at));
         $modified_by = $this->db->escapeString($modified_by);
+        $username = $this->db->escapeString($username);
         if (!$this->page_info($page)) {
-            $result = $this->db->exec("INSERT INTO qwiki_index (pagename, content, modified_at, modified_by) VALUES ('$page', '$content', '$modified_at', '$modified_by')");
+            $result = $this->db->exec("INSERT INTO qwiki_index (pagename, content, modified_at, modified_by, username) VALUES ('$page', '$content', '$modified_at', '$modified_by', '$username')");
             if (!$result) {
-                throw new QwikiException("Error inserting new row for page '$page' into qwiki_index.", QWIKI_ERR_DB); 
+                throw new QwikiException("Error inserting new row for page '$page' into qwiki_index.", QWIKI_ERR_DB);
             }
         } else {
-            $result = $this->db->exec("UPDATE qwiki_index SET content = '$content', modified_at = '$modified_at', modified_by = '$modified_by' WHERE pagename = '$page' LIMIT 1");
+            $result = $this->db->exec("UPDATE qwiki_index SET content = '$content', modified_at = '$modified_at', modified_by = '$modified_by', username = '$username' WHERE pagename = '$page' LIMIT 1");
             if (!$result) {
-                throw new QwikiException("Error updating row for page '$page' in qwiki_index.", QWIKI_ERR_DB); 
+                throw new QwikiException("Error updating row for page '$page' in qwiki_index.", QWIKI_ERR_DB);
             }
+        }
+    }
+    
+    private function remove_page_info($page) {
+        $page = $this->db->escapeString($page);
+        $result = $this->db->exec("DELETE FROM qwiki_index WHERE pagename = '$page'");
+        if (!$result) {
+            throw new QwikiException("Error removing index information on page $page from qwiki_index.", QWIKI_ERR_DB);
         }
     }
     
@@ -582,32 +622,71 @@ class Qwiki {
                 $page = Qwiki::file_pagename($fname);
                 $content = $this->page_wikitext($page);
                 $modified_at = Qwiki::page_mtime($page);
-                $this->update_page_info($page, $content, $modified_at, '');
+                $this->update_page_info($page, $content, $modified_at, '', '');
             }
         }
         @closedir($dirh);
     }
     
     /**
-     * Add a new line to QWIKI_RECENTCHANGES (usually called by Qwiki::save())
-     * @param string Page name
-     * @param string Date and time (already formatted)
-     * @param string Name of the user or IP address
+     * Generate Recent Changes from database
+     * @return string The generated HTML output
      * @access private
      */
-    private function update_recentchanges($page, $date, $username) {
-        $rcpage = QWIKI_RECENTCHANGES;
-        $oldrc = $this->page_wikitext($rcpage);
-        $f = @fopen(Qwiki::page_filename($rcpage), "w");
-        if (!$f) {
-            throw new QwikiException("File handle for $rcpage couldn't be created.", QWIKI_ERR_FILE);
-        }
-        $newrc = $oldrc."* $date: $page ($username)\n";
-        $result = @fwrite($f, $newrc);
+    private function generate_recentchanges() {
+        $until = new DateTime();
+        $until->sub(new DateInterval(QWIKI_RECENTCHANGES_INTERVAL));
+        $untild = $until->format('Y-m-d H:i:s');
+        $sql = "SELECT pagename, modified_at, modified_by, username FROM qwiki_index WHERE modified_at >= '$untild' ORDER BY modified_at DESC";
+        $result = $this->db->query($sql);
         if (!$result) {
-            throw new QwikiException("Contents could not be written to $rcpage file.", QWIKI_ERR_FILE);
+            throw new QwikiException("Error querying database for recent changes.", QWIKI_ERR_DB);
         }
-        @fclose($f);
+        $rc = array();
+        while ($row = $result->fetchArray()) {
+            $rc[] = $row;
+        }
+        $year = null;
+        $month = null;
+        $day = null;
+        $o = "";
+        if (empty($rc)) {
+            $o = "**No changes during interval ".QWIKI_RECENTCHANGES_INTERVAL.".**";
+        }
+        foreach ($rc as $r) {
+            $pagename = $r['pagename'];
+            $modified_at = $r['modified_at'];
+            $modified_by = $r['modified_by'];
+            $username = $r['username'];
+            $time = strtotime($modified_at);
+            $ryear = strftime("%G", $time);
+            $rmonth = strftime("%B", $time);
+            $rday = strftime("%A, %e.%m.", $time);
+            $rtime = date("H:i:s", $time);
+            if ($year != $ryear) {
+                $o .= "== $ryear ==\n";
+                $year = $ryear;
+            }
+            if ($month != $rmonth) {
+                $o .= "=== $rmonth ===\n";
+                $month = $rmonth;
+            }
+            if ($day != $rday) {
+                $o .= "==== $rday ====\n";
+                $day = $rday;
+            }
+            if ($username != '' && $modified_by != '') {
+                $o .= "* $rtime $pagename ($username - $modified_by)\n";
+            } elseif ($username == '' && $modified_by != '') {
+                $o .= "* $rtime $pagename ($modified_by)\n";
+            } elseif ($username != '' && $modified_by == '') {
+                $o .= "* $rtime $pagename ($username)\n";
+            } else {
+                $o .= "* $rtime $pagename\n";
+            }
+        }
+        $parser = new WikiParser($o, $this->camelcase_function);
+        return $parser->parse();
     }
     
     /**

@@ -1,4 +1,4 @@
-<h1><img src="{$logofile}" alt="Qwiki:"><a href="index.php?term={$page}&amp;action=search">{$title}</a></h1>
+<h1><a href="{$smarty.const.QWIKI_DOCROOT}"><img src="{$logofile}" alt="Qwiki:"></a>&nbsp;<a href="index.php?term={$page}&amp;action=search">{$title}</a></h1>
 
 {$content}
 <hr>

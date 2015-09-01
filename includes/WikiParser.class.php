@@ -4,7 +4,7 @@
  * @package Qwiki
  * @copyright 2015 Eric Haberstroh
  * @author Eric Haberstroh <eric@erixpage.de>
- * @version 1.0
+ * @version 1.1
  */
 /*  This file is part of Qwiki by Eric Haberstroh <eric@erixpage.de>.
     
@@ -39,6 +39,10 @@ class WikiParser {
      */
     public $camelCaseFunction = null;
     /**
+     * @var string random value that is added while generating MD5 checksums
+     */
+    private $randomValue;
+    /**
      * @var array Array of URLs in QwikiText
      */
     public $arrURLs;
@@ -55,6 +59,7 @@ class WikiParser {
     public function __construct($sourceText, $camelCaseFunction) {
         $this->sourceText = $sourceText;
         $this->camelCaseFunction = $camelCaseFunction;
+        $this->randomValue = rand();
     }
     
     /**
@@ -80,7 +85,9 @@ class WikiParser {
         // find CamelCase words and replace them with the return value of the CamelCase function
         $cell = preg_replace_callback('/([A-Z][a-z]+){2,}/', $this->camelCaseFunction, $cell);
         // replace six consecutive apostrophes with nothing
-        $cell = str_replace("''''''", "", $cell);
+        $cell = str_replace("''''''", '', $cell);
+        // replace a colon between two spaces with a medium line
+        $cell = str_replace(' - ', ' &ndash; ', $cell);
         // bold (**Text**)
         $cell = preg_replace('/\*\*(.+?)\*\*/', '<b>$1</b>', $cell);
         // italics (//Text//)
@@ -98,6 +105,12 @@ class WikiParser {
         $cell = preg_replace('/\=\=\=\=(.+?)\=\=\=\=/', '<h4>$1</h4>', $cell);
         $cell = preg_replace('/\=\=\=(.+?)\=\=\=/', '<h3>$1</h3>', $cell);
         $cell = preg_replace('/\=\=(.+?)\=\=/', '<h2>$1</h2>', $cell);
+        // Fractures
+        $cell = str_replace('1/4', '&frac14;', $cell);
+        $cell = str_replace('1/2', '&frac12;', $cell);
+        $cell = str_replace('3/4', '&frac34;', $cell);
+        $cell = str_replace('1/3', '&frac13;', $cell);
+        $cell = str_replace('2/3', '&frac23;', $cell);
         return $cell;
     }
     
@@ -154,7 +167,7 @@ class WikiParser {
      */
     private function saveURL($match) {
         $url = $match[0];
-        $md5 = md5($url);
+        $md5 = md5($url . $this->randomValue);
         $this->arrURLs[$md5] = $this->replaceSpecialChars($url);
         return $md5;
     }
@@ -166,7 +179,7 @@ class WikiParser {
      */
     private function saveNowiki($match) {
         $nowiki = $match[0];
-        $md5 = md5($nowiki);
+        $md5 = md5($nowiki . $this->randomValue);
         $nowiki = str_replace('<nowiki>', '', $nowiki);
         $nowiki = str_replace('</nowiki>', '', $nowiki);
         $this->arrNowiki[$md5] = $this->replaceSpecialChars($nowiki);
@@ -256,6 +269,7 @@ class WikiParser {
                     $olDepth -= 1;
                 }
             }
+            // Quotes (indentation with one or more >)
             if (preg_match('/^(\>)+/', $l, $arrMatches)) {
                 if ($inParagraph) {
                     $o .= "</p>";
@@ -263,7 +277,7 @@ class WikiParser {
                 }
                 while (strlen($arrMatches[0]) > $quoteDepth) {
                     $quoteDepth += 1;
-                    $o .= '<div style="margin-left:10px;">';
+                    $o .= '<div style="margin-left:1em;">';
                 }
                 while (strlen($arrMatches[0]) < $quoteDepth) {
                     $o .= "</div>";

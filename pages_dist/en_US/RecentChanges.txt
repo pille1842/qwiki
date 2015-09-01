@@ -1,7 +1,10 @@
-This page contains a log of all changes made to this wiki. A change is only logged here when the new version of a page differs from the old one, and when the IP address of the editor differs from the previous editor's IP address. This is a measure to protect this page against spam.
+This page contains a log of all changes to this wiki. For each page, only the last edit is shown in the list below.
 
-If you want a custom username to appear in the log instead of plain IP addresses, use the following form to set your username. It will be stored on your computer as a cookie.
+If you want a personal username to appear in the log below, you can set it using this input field. The username is stored on your computer as a cookie for one year. You can also change your username here.
 
-QWIKI_SETUSERNAME
+%%QWIKI_SETUSERNAME%%
 
-The log is amended by adding lines to this page. You can change the upper parts of this page to your liking, for example introducing separators for years and months.
+The log is automatically created from Qwiki's index database. It shows all changes in the last year (configuration variable ''QWIKI_RECENTCHANGES_INTERVAL'' in ''includes/configuration.php'') sorted by years, months, and days, starting with the youngest change. If possible, the username and IP address of the editor are listed for each change.
+----
+%%QWIKI_RECENTCHANGES%%
+

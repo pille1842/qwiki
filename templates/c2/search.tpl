@@ -1,4 +1,4 @@
-<h1><img src="{$logofile}" alt="Search:"><a href="{$smarty.const.QWIKI_DOCROOT}{$smarty.const.QWIKI_FINDPAGE}">{$title}</a></h1>
+<h1><a href="{$smarty.const.QWIKI_DOCROOT}"><img src="{$logofile}" alt="Qwiki:"></a>&nbsp;<a href="{$smarty.const.QWIKI_DOCROOT}{$smarty.const.QWIKI_FINDPAGE}">{$title}</a></h1>
 <ol>
 {foreach from=$results key="pagename" item="snippet"}
     <li><a href="{$smarty.const.QWIKI_DOCROOT}{$pagename}">{$pagename}</a><br>{$snippet}</li>

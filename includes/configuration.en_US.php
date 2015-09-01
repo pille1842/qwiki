@@ -43,9 +43,9 @@ define('QWIKI_FRONTPAGE', 'FrontPage');
  */
 define('QWIKI_ERRORPAGE', 'PageNotFound');
 /**
- * RecentChanges page for the edit log
+ * Time interval to subtract from today when displaying recent changes (e.g. P14D)
  */
-define('QWIKI_RECENTCHANGES', 'RecentChanges');
+define('QWIKI_RECENTCHANGES_INTERVAL', 'P12M');
 /**
  * FindPage name (page that contains the search form)
  */
@@ -54,6 +54,10 @@ define('QWIKI_FINDPAGE', 'FindPage');
  * Locale of this installation (e.g. en_US or de_DE)
  */
 define('QWIKI_LOCALE', 'en_US');
+/**
+ * Language of this installation (e.g. en or de)
+ */
+define('QWIKI_LANGUAGE', 'en');
 /**
  * Path to logo image (displayed in upper left corner)
  */
@@ -69,7 +73,11 @@ define('QWIKI_INDEX_FILE', QWIKI_DIR_PAGES.'fullindex.sqlite');
 /**
  * Directory for templates
  */
-define('QWIKI_DIR_TEMPLATE', QWIKI_HTDOCS.'templates/');
+define('QWIKI_DIR_TEMPLATE', QWIKI_HTDOCS.'templates/c2/');
+/**
+ * URL for templates
+ */
+define('QWIKI_URL_TEMPLATE', QWIKI_DOCROOT.'templates/c2/');
 /**
  * Compile directory for Smarty (has to be writable by webserver)
  */

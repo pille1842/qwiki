@@ -1,6 +1,6 @@
 Du kannst die Seitentitel und Texte dieses Wikis mit der folgenden Suchmaschine durchsuchen. Gib einen Suchbegriff ein und klicke auf OK.
 
-QWIKI_SEARCH
+%%QWIKI_SEARCH%%
 
 Einige Hinweise zur Suche:
 

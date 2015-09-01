@@ -1,6 +1,6 @@
 You can search the contents of this wiki by using the following search engine. Enter your search terms and click OK.
 
-QWIKI_SEARCH
+%%QWIKI_SEARCH%%
 
 Some hints:
 

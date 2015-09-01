@@ -1,0 +1,53 @@
+body {
+    /*width: 920px;
+    margin: 0 auto;
+    padding-bottom: 50px;*/
+}
+
+a, a:visited {
+    color: #0000FF;
+}
+
+table {
+    border-collapse: collapse;
+}
+
+table, td, th {
+    border: 1px solid black;
+}
+
+td, th {
+    text-align: left;
+    vertical-align: top;
+    padding: 5px;
+}
+
+th {
+    background-color: lightgrey;
+}
+
+pre {
+    border: 1px solid darkgrey;
+    padding: 15px;
+    background-color: lightgrey;
+}
+
+.diff {
+    width: 100%;
+}
+
+.diff td {
+    vertical-align : top;
+    white-space    : pre;
+    white-space    : pre-wrap;
+    font-family    : monospace;
+    width: 50%;
+}
+
+.diffInserted {
+    color: green;
+}
+
+.diffDeleted {
+    color: red;
+}

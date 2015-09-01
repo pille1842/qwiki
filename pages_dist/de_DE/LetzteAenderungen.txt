@@ -1,7 +1,9 @@
-Diese Seite enthält ein Protokoll aller Änderungen, die an diesem Wiki vorgenommen werden. Eine Änderung wird nur protokolliert, wenn sich die neue Version einer Seite von der alten unterscheidet und wenn die IP-Adresse des Bearbeiters nicht mit der IP-Adresse des vorherigen Bearbeiters übereinstimmt (Spamschutz-Maßnahme).
+Diese Seite enthält ein Protokoll aller Änderungen, die an diesem Wiki vorgenommen werden. Von jeder Seite wird jeweils nur die letzte Änderung angezeigt.
 
-Wenn du möchtest, dass statt der IP-Adresse des Bearbeiters ein von ihm gewählter Benutzername angezeigt wird, dann verwende das folgende Formular, um deinen Benutzernamen zu setzen. Er wird als Cookie auf deinem Rechner gespeichert.
+Wenn Sie möchten, dass im Protokoll ein von Ihnen gewählter Benutzername auftaucht (sollte ein CamelCase-Wort sein), dann geben Sie hier den gewünschten Namen ein und klicken Sie auf OK. Der Name wird für ein Jahr als Cookie auf Ihrem Rechner gespeichert. Sie können den Namen hier auch nachträglich ändern.
 
-QWIKI_SETUSERNAME
+%%QWIKI_SETUSERNAME%%
 
-Das Protokoll wird geführt, indem an diese Seite unten Zeilen angehängt werden. Du kannst die oberen Teile der Seite bearbeiten wie du möchtest und beispielsweise eine Unterteilung in Jahre und Monate einfügen.
+Das Protokoll wird automatisch aus der Index-Datenbank des Wikis erzeugt. Es zeigt die Änderungen des letzten Jahres (Konfigurationsvariable ''QWIKI_RECENTCHANGES_INTERVAL'' in ''includes/configuration.php'') geordnet nach Jahren, Monaten und Tagen an, beginnend mit der jüngsten Änderung. Wenn vorhanden, werden auch Informationen zum Bearbeiter (IP-Adresse und Benutzername) angezeigt.
+----
+%%QWIKI_RECENTCHANGES%%

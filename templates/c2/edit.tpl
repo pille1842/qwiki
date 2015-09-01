@@ -1,4 +1,4 @@
-<h1><img src="{$logofile}" alt="Edit:">{$title}</h1>
+<h1><a href="{$smarty.const.QWIKI_DOCROOT}"><img src="{$logofile}" alt="Qwiki:"></a>&nbsp;{$title}</h1>
 
 {if isset($preview) AND $preview neq ""}
 <h2>{#preview#}:</h2>
