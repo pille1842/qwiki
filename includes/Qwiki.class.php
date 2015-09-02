@@ -525,6 +525,7 @@ class Qwiki {
         $result = str_replace("%%QWIKI_SEARCH%%", '<form method="post" action="'.QWIKI_DOCROOT.'index.php"><input type="text" name="term" value=""><button type="submit" name="action" value="search">OK</button></form>', $result);
         $result = str_replace("%%QWIKI_SETUSERNAME%%", '<form method="post" action="'.QWIKI_DOCROOT.'index.php"><input type="text" name="username" value="'.$this->username.'"><button type="submit" name="action" value="setusername">OK</button><input type="hidden" name="page" value="'.$page.'"></form>', $result);
         $result = str_replace("%%QWIKI_RECENTCHANGES%%", $this->generate_recentchanges(), $result);
+        $result = str_replace("%%QWIKI_RECENTCHANGES_SHORT%%", $this->generate_recentchanges(QWIKI_RECENTCHANGES_INTERVAL_SHORT), $result);
         return $result;
     }
     
@@ -633,9 +634,9 @@ class Qwiki {
      * @return string The generated HTML output
      * @access private
      */
-    private function generate_recentchanges() {
+    private function generate_recentchanges($interval = QWIKI_RECENTCHANGES_INTERVAL) {
         $until = new DateTime();
-        $until->sub(new DateInterval(QWIKI_RECENTCHANGES_INTERVAL));
+        $until->sub(new DateInterval($interval));
         $untild = $until->format('Y-m-d H:i:s');
         $sql = "SELECT pagename, modified_at, modified_by, username FROM qwiki_index WHERE modified_at >= '$untild' ORDER BY modified_at DESC";
         $result = $this->db->query($sql);
@@ -651,7 +652,7 @@ class Qwiki {
         $day = null;
         $o = "";
         if (empty($rc)) {
-            $o = "**No changes during interval ".QWIKI_RECENTCHANGES_INTERVAL.".**";
+            $o = "**No changes during interval ".$interval.".**";
         }
         foreach ($rc as $r) {
             $pagename = $r['pagename'];

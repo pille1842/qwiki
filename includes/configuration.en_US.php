@@ -47,6 +47,10 @@ define('QWIKI_ERRORPAGE', 'PageNotFound');
  */
 define('QWIKI_RECENTCHANGES_INTERVAL', 'P12M');
 /**
+ * Time interval for the short version of recent changes (e.g. P3D)
+ */
+define('QWIKI_RECENTCHANGES_INTERVAL_SHORT', 'P3D');
+/**
  * FindPage name (page that contains the search form)
  */
 define('QWIKI_FINDPAGE', 'FindPage');
