@@ -133,7 +133,7 @@ class WikiParser {
         // <nowiki>-Abschnitte durch ihre MD5-Summe ersetzen
         $op = preg_replace_callback('#<nowiki>(.*?)</nowiki>#s', 'WikiParser::saveNowiki', $op);
         // das gleiche mit URLs machen
-        $op = preg_replace_callback('/\b(?<!a href=\")(?<!src=\")((http|ftp)+(s)?:\/\/[^<>\s]+)/ix', 'WikiParser::saveURL', $op);
+        $op = preg_replace_callback('/\b(?<!a href=\")(?<!src=\")((http|ftp)+(s)?:\/\/[^<>\s]+[a-zA-Z0-9])/ix', 'WikiParser::saveURL', $op);
         return $op;
     }
     
@@ -354,9 +354,9 @@ class WikiParser {
                     $inParagraph = false;
                 }
                 if ($inPre) {
-                    $o .= preg_replace('/^( )+/', '', $this->replaceSpecialChars($l));
+                    $o .= preg_replace('/^( )/', '', $this->replaceSpecialChars($l));
                 } else {
-                    $o .= "<pre>" . preg_replace('/^( )+/', '', $this->replaceSpecialChars($l));
+                    $o .= "<pre>" . preg_replace('/^( )/', '', $this->replaceSpecialChars($l));
                     $inPre = true;
                 }
                 $handled = true;
