@@ -106,11 +106,21 @@ class WikiParser {
         $cell = preg_replace('/\=\=\=(.+?)\=\=\=/', '<h3>$1</h3>', $cell);
         $cell = preg_replace('/\=\=(.+?)\=\=/', '<h2>$1</h2>', $cell);
         // Fractures
-        $cell = str_replace('1/4', '&frac14;', $cell);
         $cell = str_replace('1/2', '&frac12;', $cell);
-        $cell = str_replace('3/4', '&frac34;', $cell);
         $cell = str_replace('1/3', '&frac13;', $cell);
+        $cell = str_replace('1/4', '&frac14;', $cell);
+        $cell = str_replace('1/5', '&frac15;', $cell);
+        $cell = str_replace('1/6', '&frac16;', $cell);
+        $cell = str_replace('1/8', '&frac18;', $cell);
         $cell = str_replace('2/3', '&frac23;', $cell);
+        $cell = str_replace('2/5', '&frac25;', $cell);
+        $cell = str_replace('3/4', '&frac34;', $cell);
+        $cell = str_replace('3/5', '&frac35;', $cell);
+        $cell = str_replace('3/8', '&frac38;', $cell);
+        $cell = str_replace('4/5', '&frac45;', $cell);
+        $cell = str_replace('5/6', '&frac56;', $cell);
+        $cell = str_replace('5/8', '&frac58;', $cell);
+        $cell = str_replace('7/8', '&frac78;', $cell);
         return $cell;
     }
     
