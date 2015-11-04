@@ -7,4 +7,8 @@ Ein paar Einstiegspunkte:
 * Auf SeiteFinden kannst du den Inhalt dieses Wikis durchsuchen.
 * Im WikiSandkasten kannst du dein neu erlerntes Wissen ausprobieren und mit der Syntax herumexperimentieren.
 
+Benutze das folgende Formular, um neue Seiten zu erstellen. Seitennamen müssen Camelcase-Wörter sein.
+
+%%QWIKI_CREATEPAGE%%
+
 Besuche https://github.com/pille1842/qwiki für Neuigkeiten zu Qwiki.

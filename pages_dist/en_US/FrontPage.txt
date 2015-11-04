@@ -7,4 +7,8 @@ Some good starting points:
 * With FindPage you can search the contents of this wiki.
 * You can try out the syntax at WikiSandbox.
 
+Use the following form to create new pages on your wiki. Page names have to be Camelcase words.
+
+%%QWIKI_CREATEPAGE%%
+
 Visit https://github.com/pille1842/qwiki for news about Qwiki.
