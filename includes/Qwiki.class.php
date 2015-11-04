@@ -4,7 +4,7 @@
  * @package Qwiki
  * @copyright 2015 Eric Haberstroh
  * @author Eric Haberstroh <eric@erixpage.de>
- * @version 2.0
+ * @version 2.0.2
  */
 /*  This file is part of Qwiki by Eric Haberstroh <eric@erixpage.de>.
     
@@ -28,7 +28,7 @@ if (!defined('QWIKI_EXEC')) {
 /**
  * This version of Qwiki
  */
-define('QWIKI_VERSION', '2.0.1');
+define('QWIKI_VERSION', '2.0.2');
 
 /**
  * This exception code is used when the constructor parameters are not

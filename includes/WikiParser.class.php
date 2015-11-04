@@ -4,7 +4,7 @@
  * @package Qwiki
  * @copyright 2015 Eric Haberstroh
  * @author Eric Haberstroh <eric@erixpage.de>
- * @version 1.1
+ * @version 1.1.1
  */
 /*  This file is part of Qwiki by Eric Haberstroh <eric@erixpage.de>.
     
