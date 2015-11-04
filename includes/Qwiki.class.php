@@ -459,6 +459,8 @@ class Qwiki {
      * @access private
      */
     private function search($term) {
+        // show snippets only when search term is not a CamelCase word
+        $isWikiWord = preg_match("/([A-Z][a-z]+){2,}/", $term);
         $term = $this->db->escapeString($term);
         $index = array();
         $result = $this->db->query("SELECT pagename, snippet(qwiki_index) AS sn FROM qwiki_index WHERE pagename LIKE '%$term%'");
@@ -466,14 +468,24 @@ class Qwiki {
             throw new QwikiException('The given search term resulted in a database error.', QWIKI_ERR_DB);
         }
         while ($row = $result->fetchArray()) {
-            $index[$row['pagename']] = $row['sn'];
+            if (!$isWikiWord) {
+                $snippet = $row['sn'];
+            } else {
+                $snippet = '';
+            }
+            $index[$row['pagename']] = $snippet;
         }
         $result = $this->db->query("SELECT pagename, snippet(qwiki_index) AS sn FROM qwiki_index WHERE qwiki_index MATCH '$term'");
         if (!$result) {
             throw new QwikiException('The given search term resulted in a database error.', QWIKI_ERR_DB);
         }
         while ($row = $result->fetchArray()) {
-            $index[$row['pagename']] = $this->sanitize_snippet($row['sn']);
+            if (!$isWikiWord) {
+                $snippet = $row['sn'];
+            } else {
+                $snippet = '';
+            }
+            $index[$row['pagename']] = $this->sanitize_snippet($snippet);
         }
         ksort($index);
         $this->smarty->assign('template', 'search.tpl');

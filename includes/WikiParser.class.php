@@ -97,7 +97,7 @@ class WikiParser {
         // strike-through (--Text--)
         $cell = preg_replace('/\-\-(.+?)\-\-/', '<del>$1</del>', $cell);
         // replace eMail addresses with their mailto: link
-        $cell = preg_replace('/(\S+@\S+\.\S+)/', '<a href="mailto:$1">$1</a>', $cell);
+        $cell = preg_replace('/([A-Za-z0-9.!#$%&\'*+\-\/\=?\^_`{|}~]+@[A-Za-z0-9\-]+\.[a-zA-Z]+)/', '<a href="mailto:$1">$1</a>', $cell);
         // use monospace font (''Text'')
         $cell = preg_replace('/\'\'(.+?)\'\'/', '<tt>$1</tt>', $cell);
         // headings (H2-H5)
@@ -130,10 +130,10 @@ class WikiParser {
      * @return string QwikiText without <nowiki> blocks and URLs
      */
     private function specialsBefore($op) {
-        // <nowiki>-Abschnitte durch ihre MD5-Summe ersetzen
+        // filter <nowiki> blocks from the page source and store them
         $op = preg_replace_callback('#<nowiki>(.*?)</nowiki>#s', 'WikiParser::saveNowiki', $op);
-        // das gleiche mit URLs machen
-        $op = preg_replace_callback('/\b(?<!a href=\")(?<!src=\")((http|ftp)+(s)?:\/\/[^<>\s]+[a-zA-Z0-9])/ix', 'WikiParser::saveURL', $op);
+        // do the same with URLs
+        $op = preg_replace_callback('/\b(?<!a href=\")(?<!src=\")((http|ftp)+(s)?:\/\/[^<>\s]+[a-zA-Z0-9\/])/ix', 'WikiParser::saveURL', $op);
         return $op;
     }
     
@@ -249,7 +249,7 @@ class WikiParser {
                     $o .= "</ul>";
                     $listDepth -= 1;
                 }
-                $o .= "<li>" . $this->parseBytewise(preg_replace('/^(\*)+/', '', $l)) . "</li>";
+                $o .= "<li>" . $this->parseBytewise(preg_replace('/^(\*)+ /', '', $l)) . "</li>";
                 $handled = true;
             } else {
                 while ($listDepth > 0) {
@@ -271,7 +271,7 @@ class WikiParser {
                     $o .= "</ol>";
                     $olDepth -= 1;
                 }
-                $o .= "<li>" . $this->parseBytewise(preg_replace('/^(\#)+/', '', $l)) . "</li>";
+                $o .= "<li>" . $this->parseBytewise(preg_replace('/^(\#)+ /', '', $l)) . "</li>";
                 $handled = true;
             } else {
                 while ($olDepth > 0) {
