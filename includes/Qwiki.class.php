@@ -538,6 +538,7 @@ class Qwiki {
         $result = str_replace("%%QWIKI_SETUSERNAME%%", '<form method="post" action="'.QWIKI_DOCROOT.'index.php"><input type="text" name="username" value="'.$this->username.'"><button type="submit" name="action" value="setusername">OK</button><input type="hidden" name="page" value="'.$page.'"></form>', $result);
         $result = str_replace("%%QWIKI_RECENTCHANGES%%", $this->generate_recentchanges(), $result);
         $result = str_replace("%%QWIKI_RECENTCHANGES_SHORT%%", $this->generate_recentchanges(QWIKI_RECENTCHANGES_INTERVAL_SHORT), $result);
+        $result = str_replace("%%QWIKI_CREATEPAGE%%", '<form method="get" action="'.QWIKI_DOCROOT.'index.php"><input type="text" name="page" value=""><button type="submit" name="action" value="edit">OK</button></form>', $result);
         return $result;
     }
     
