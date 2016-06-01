@@ -3,6 +3,7 @@
 {$content}
 <hr>
 <a href="{$smarty.const.QWIKI_DOCROOT}{$page}/edit">{#EditPage#}</a> ({#LastEdit#}:
-{if $backupexists neq 0}<a href="{$smarty.const.QWIKI_DOCROOT}{$page}/diff">{/if}{$pagemodtime}{if $backupexists neq 0}</a>{/if})
-{#or#} <a href="{$smarty.const.QWIKI_DOCROOT}{$findpagename}">{#FindPage#}</a> {#with_title_and_fulltext#}
+{if $backupexists neq 0}<a href="{$smarty.const.QWIKI_DOCROOT}{$page}/diff">{/if}{$pagemodtime}{if $backupexists neq 0}</a>{/if})<br>
+{#or#} <a href="{$smarty.const.QWIKI_DOCROOT}{$findpagename}">{#FindPage#}</a> {#with_title_and_fulltext#}<br>
+{#or#} {#show#} <a href="{$smarty.const.QWIKI_DOCROOT}?action=randompage">{#RandomPage#}</a>
 {if $username neq ''}<div style="text-align:right;">{#username#}: {$username}</div>{/if}

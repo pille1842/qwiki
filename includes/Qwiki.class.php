@@ -4,10 +4,10 @@
  * @package Qwiki
  * @copyright 2015 Eric Haberstroh
  * @author Eric Haberstroh <eric@erixpage.de>
- * @version 2.0.2
+ * @version 2.1
  */
 /*  This file is part of Qwiki by Eric Haberstroh <eric@erixpage.de>.
-    
+
     Qwiki is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
@@ -60,6 +60,7 @@ define('QWIKI_ACTION_SAVE', 4);
 define('QWIKI_ACTION_DIFF', 5);
 define('QWIKI_ACTION_SEARCH', 6);
 define('QWIKI_ACTION_SETUSERNAME', 7);
+define('QWIKI_ACTION_RANDOMPAGE', 8);
 
 /**
  * Class definition: custom exception class
@@ -73,7 +74,7 @@ class QwikiException extends Exception {
     public function __construct($message, $code = 0) {
         parent::__construct($message, $code);
     }
-    
+
     /**
      * Custom function for transforming the exception into a string
      * @return string The generated exception string
@@ -81,7 +82,7 @@ class QwikiException extends Exception {
     public function __toString() {
         return __CLASS__ . ": [{$this->code}]: {$this->message}";
     }
-    
+
     /**
      * Generate a basic HTML page to display the exception
      */
@@ -142,7 +143,7 @@ class Qwiki {
      * @access private
      */
     private $db;
-    
+
     /**
      * Class constructor
      * @param array Array of $_GET values
@@ -197,7 +198,7 @@ class Qwiki {
         }
         $this->smarty->assign('username', $this->username);
     }
-    
+
     /**
      * Main function to display the site
      * @access public
@@ -225,6 +226,9 @@ class Qwiki {
                     break;
                 case 'setusername':
                     $action = QWIKI_ACTION_SETUSERNAME;
+                    break;
+                case 'randompage':
+                    $action = QWIKI_ACTION_RANDOMPAGE;
                     break;
                 default:
                     throw new QwikiException("Unknown action parameter '{$this->input['action']}'.", QWIKI_ERR_PARAMETER);
@@ -302,9 +306,12 @@ class Qwiki {
                     $this->setusername($this->input['username'], $page);
                 }
                 break;
+            case QWIKI_ACTION_RANDOMPAGE:
+                $this->randompage();
+                break;
         }
     }
-    
+
     /**
      * Action dispatcher: VIEW
      * @param string Name of the page to display
@@ -337,7 +344,7 @@ class Qwiki {
         }
         $this->smarty->display('index.tpl');
     }
-    
+
     /**
      * Action dispatcher: EDIT
      * @param string Name of the page to edit
@@ -350,7 +357,7 @@ class Qwiki {
         $this->smarty->assign('edittext', $this->page_wikitext($page));
         $this->smarty->display('index.tpl');
     }
-    
+
     /**
      * Action dispatcher: PREVIEW
      * @param string Name of the page that is edited
@@ -373,7 +380,7 @@ class Qwiki {
         $this->smarty->assign('preview', $parser->parse());
         $this->smarty->display('index.tpl');
     }
-    
+
     /**
      * Action dispatcher: SAVE
      * @param string Name of the page to save
@@ -406,7 +413,7 @@ class Qwiki {
             }
             $f = @fopen($this->page_filename($page), 'w');
             if (!$f) {
-                throw new QwikiException("Error creating file handle for $page's file.", QWIKI_ERR_FILE); 
+                throw new QwikiException("Error creating file handle for $page's file.", QWIKI_ERR_FILE);
             }
             $result = @fwrite($f, $edittext);
             if ($result === false) {
@@ -427,7 +434,7 @@ class Qwiki {
         $this->smarty->assign('page', $page);
         $this->smarty->display('index.tpl');
     }
-    
+
     /**
      * Action dispatcher: DIFF
      * @param string Name of the page to display a quickdiff of
@@ -452,7 +459,7 @@ class Qwiki {
             $this->view($page, true);
         }
     }
-    
+
     /**
      * Action dispatcher: SEARCH
      * @param string Term to search the database for
@@ -494,7 +501,27 @@ class Qwiki {
         $this->smarty->assign('results', $index);
         $this->smarty->display('index.tpl');
     }
-    
+
+    /**
+     * Action dispatcher: RANDOMPAGE
+     * @access private
+     */
+    private function randompage() {
+        $result = $this->db->query("SELECT pagename FROM qwiki_index");
+        if (!$result) {
+            throw new QwikiException('A full list of page names could not be retrieved from the index database.', QWIKI_ERR_DB);
+        }
+        $pages = array();
+        while ($row = $result->fetchArray()) {
+            $pages[] = $row['pagename'];
+        }
+        $min = 0;
+        $max = count($pages) - 1;
+        $random = rand($min, $max);
+        $pagename = $pages[$random];
+        $this->view($pagename);
+    }
+
     /**
      * Remove any HTML special characters from FTS3 snippets except "bold" tags inserted by FTS3
      * @param string snippet
@@ -511,7 +538,7 @@ class Qwiki {
         $snippet = str_replace("[[/TAG_BOLD]]", "</b>", $snippet);
         return $snippet;
     }
-    
+
     /**
      * Action dispatcher: SETUSERNAME
      * @param string Username to set
@@ -524,7 +551,7 @@ class Qwiki {
         $this->smarty->assign('username', $username);
         $this->view($page);
     }
-    
+
     /**
      * Generate HTML code of the given page
      * @param string Page name
@@ -541,7 +568,7 @@ class Qwiki {
         $result = str_replace("%%QWIKI_CREATEPAGE%%", '<form method="get" action="'.QWIKI_DOCROOT.'index.php"><input type="text" name="page" value=""><button type="submit" name="action" value="edit">OK</button></form>', $result);
         return $result;
     }
-    
+
     /**
      * Get source text of the given page
      * @param string Page name
@@ -556,7 +583,7 @@ class Qwiki {
             return "";
         }
     }
-    
+
     /**
      * Get source text of the backup file of the given page
      * @param string Page name
@@ -571,7 +598,7 @@ class Qwiki {
            return "";
         }
     }
-    
+
     /**
      * Get information about the given page from the database
      * @param string Page name
@@ -586,7 +613,7 @@ class Qwiki {
         }
         return $result->fetchArray();
     }
-    
+
     /**
      * Update page information in the database
      * @param string Page name
@@ -613,7 +640,7 @@ class Qwiki {
             }
         }
     }
-    
+
     private function remove_page_info($page) {
         $page = $this->db->escapeString($page);
         $result = $this->db->exec("DELETE FROM qwiki_index WHERE pagename = '$page'");
@@ -621,7 +648,7 @@ class Qwiki {
             throw new QwikiException("Error removing index information on page $page from qwiki_index.", QWIKI_ERR_DB);
         }
     }
-    
+
     /**
      * Rebuild complete index from the files in the QWIKI_DIR_PAGES directory
      * @access private
@@ -641,7 +668,7 @@ class Qwiki {
         }
         @closedir($dirh);
     }
-    
+
     /**
      * Generate Recent Changes from database
      * @return string The generated HTML output
@@ -702,7 +729,7 @@ class Qwiki {
         $parser = new WikiParser($o, $this->camelcase_function);
         return $parser->parse();
     }
-    
+
     /**
      * Check if a page exists on disk
      * @param string Page name
@@ -712,7 +739,7 @@ class Qwiki {
     public static function page_exists($page) {
         return file_exists(Qwiki::page_filename($page));
     }
-    
+
     /**
      * Check if a backup file for the given page exists
      * @param string Page name
@@ -722,7 +749,7 @@ class Qwiki {
     public static function backup_exists($page) {
         return file_exists(Qwiki::page_backupname($page));
     }
-    
+
     /**
      * Get the modification timestamp for the given page
      * @param string Page name
@@ -732,7 +759,7 @@ class Qwiki {
     public static function page_mtime($page) {
         return filemtime(Qwiki::page_filename($page));
     }
-    
+
     /**
      * Get the full path to the given page
      * @param string Page name
@@ -742,7 +769,7 @@ class Qwiki {
     public static function page_filename($page) {
         return QWIKI_DIR_PAGES . $page . '.txt';
     }
-    
+
     /**
      * Extract the page name from a file name by subtracting the last 4 characters (.txt)
      * @param string Filename
@@ -752,7 +779,7 @@ class Qwiki {
     public static function file_pagename($file) {
         return substr($file, 0, -4);
     }
-    
+
     /**
      * Get the full path to the backup file of the given page
      * @param string Page name
@@ -762,7 +789,7 @@ class Qwiki {
     public static function page_backupname($page) {
         return Qwiki::page_filename($page) . '~';
     }
-    
+
     /**
      * Transform CamelCase words to links (called via preg_replace_callback by WikiParser)
      * @param array Array of matches (only first value is evaluated)
@@ -778,7 +805,7 @@ class Qwiki {
         }
         return $ret;
     }
-    
+
     /**
      * Expand CamelCase words for displaying in headings (CamelCaseWord => Camel Case Word)
      * @param string CamelCase word
