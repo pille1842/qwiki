@@ -28,7 +28,7 @@ if (!defined('QWIKI_EXEC')) {
 /**
  * This version of Qwiki
  */
-define('QWIKI_VERSION', '2.0.2');
+define('QWIKI_VERSION', '2.1');
 
 /**
  * This exception code is used when the constructor parameters are not
