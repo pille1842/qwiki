@@ -173,6 +173,10 @@ class Qwiki {
             if (!$result) {
                 throw new QwikiException('Error creating nonexisting qwiki_index table in database file '.QWIKI_INDEX_FILE.'.', QWIKI_ERR_DB);
             }
+            $result = $this->db->exec("CREATE TABLE IF NOT EXISTS qwiki_changelog(pagename VARCHAR(255) NOT NULL, updated_at DATETIME NOT NULL, action VARCHAR(1) NOT NULL DEFAULT 'U', username VARCHAR(255) NOT NULL DEFAULT '', user_ip VARCHAR(15) NOT NULL DEFAULT '', PRIMARY KEY (pagename, updated_at))");
+            if (!$result) {
+                throw new QwikiException('Error creating nonexisting qwiki_changelog table in database file '.QWIKI_INDEX_FILE.'.', QWIKI_ERR_DB);
+            }
         } elseif (!file_exists(QWIKI_INDEX_FILE)) {
             $result = @touch(QWIKI_INDEX_FILE);
             if (!$result) {
@@ -185,6 +189,10 @@ class Qwiki {
             $result = $this->db->exec("CREATE VIRTUAL TABLE IF NOT EXISTS qwiki_index USING fts3(pagename VARCHAR(255) NOT NULL, content TEXT, modified_at DATETIME, modified_by VARCHAR(15), username VARCHAR(100) DEFAULT '')");
             if (!$result) {
                 throw new QwikiException('Error creating nonexisting qwiki_index table in database file '.QWIKI_INDEX_FILE.'.', QWIKI_ERR_DB);
+            }
+            $result = $this->db->exec("CREATE TABLE IF NOT EXISTS qwiki_changelog(pagename VARCHAR(255) NOT NULL, updated_at DATETIME NOT NULL, action VARCHAR(1) NOT NULL DEFAULT 'U', username VARCHAR(255) NOT NULL DEFAULT '', user_ip VARCHAR(15) NOT NULL DEFAULT '', PRIMARY KEY (pagename, updated_at))");
+            if (!$result) {
+                throw new QwikiException('Error creating nonexisting qwiki_changelog table in database file '.QWIKI_INDEX_FILE.'.', QWIKI_ERR_DB);
             }
             $this->rebuild_index();
         } elseif (file_exists(QWIKI_INDEX_FILE) && !is_writable(QWIKI_INDEX_FILE)) {
@@ -397,7 +405,11 @@ class Qwiki {
         $edittext = str_replace("~~", $username, $edittext);
         if (!$info) {
             $this->update_page_info($page, $edittext, $nowtime, $ipaddr, $username);
+            $this->insert_changelog($page, $nowtime, 'I', $ipaddr, $username);
+            $isnew = true;
             $info = array('pagename' => $page, 'content' => '', 'modified_at' => date("Y-m-d H:i:s", $nowtime), 'modified_by' => $ipaddr, 'username' => '');
+        } else {
+            $isnew = false;
         }
         if ($info['content'] != $edittext) {
             if ($ipaddr != $info['modified_by']) {
@@ -421,6 +433,9 @@ class Qwiki {
             }
             @fclose($f);
             $this->update_page_info($page, $edittext, $nowtime, $ipaddr, $username);
+            if (!$isnew) {
+                $this->insert_changelog($page, $nowtime, 'U', $ipaddr, $username);
+            }
         }
         if ($this->page_wikitext($page) == "delete" && $this->page_backuptext($page) == "delete") {
             // Page file as well as backup file only contain the word "delete". Confirm this delete and remove
@@ -428,6 +443,7 @@ class Qwiki {
             @unlink($this->page_filename($page));
             @unlink($this->page_backupname($page));
             $this->remove_page_info($page);
+            $this->insert_changelog($page, $nowtime, 'D', $ipaddr, $username);
         }
         $this->smarty->assign('template', 'save.tpl');
         $this->smarty->assign('title', Qwiki::expand_camelcase($page));
@@ -561,11 +577,11 @@ class Qwiki {
     private function page_html($page) {
         $parser = new WikiParser($this->page_wikitext($page), $this->camelcase_function);
         $result = $parser->parse();
-        $result = str_replace("%%QWIKI_SEARCH%%", '<form method="post" action="'.QWIKI_DOCROOT.'index.php"><input type="text" name="term" value=""><button type="submit" name="action" value="search">OK</button></form>', $result);
-        $result = str_replace("%%QWIKI_SETUSERNAME%%", '<form method="post" action="'.QWIKI_DOCROOT.'index.php"><input type="text" name="username" value="'.$this->username.'"><button type="submit" name="action" value="setusername">OK</button><input type="hidden" name="page" value="'.$page.'"></form>', $result);
+        $result = str_replace("%%QWIKI_SEARCH%%", '<form method="post" action="'.QWIKI_DOCROOT.'index.php"><input type="text" name="term" value="" placeholder="Search term"><button type="submit" name="action" value="search">OK</button></form>', $result);
+        $result = str_replace("%%QWIKI_SETUSERNAME%%", '<form method="post" action="'.QWIKI_DOCROOT.'index.php"><input type="text" name="username" value="'.$this->username.'" placeholder="UserName"><button type="submit" name="action" value="setusername">OK</button><input type="hidden" name="page" value="'.$page.'"></form>', $result);
         $result = str_replace("%%QWIKI_RECENTCHANGES%%", $this->generate_recentchanges(), $result);
         $result = str_replace("%%QWIKI_RECENTCHANGES_SHORT%%", $this->generate_recentchanges(QWIKI_RECENTCHANGES_INTERVAL_SHORT), $result);
-        $result = str_replace("%%QWIKI_CREATEPAGE%%", '<form method="get" action="'.QWIKI_DOCROOT.'index.php"><input type="text" name="page" value=""><button type="submit" name="action" value="edit">OK</button></form>', $result);
+        $result = str_replace("%%QWIKI_CREATEPAGE%%", '<form method="get" action="'.QWIKI_DOCROOT.'index.php"><input type="text" name="page" value="" placeholder="PageName"><button type="submit" name="action" value="edit">OK</button></form>', $result);
         return $result;
     }
 
@@ -618,8 +634,9 @@ class Qwiki {
      * Update page information in the database
      * @param string Page name
      * @param string Content of the page
-     * @param string Date and time of last modification in SQL-apt format
+     * @param string Date and time of last modification (UNIX timestamp)
      * @param string IP address of the modifier in dot notation
+     * @param string Username of the modifier
      * @access private
      */
     private function update_page_info($page, $content, $modified_at, $modified_by, $username) {
@@ -641,6 +658,32 @@ class Qwiki {
         }
     }
 
+    /**
+     * Insert new entry into changelog table
+     * @param string Page name
+     * @param string Date and time of last modification (UNIX timestamp)
+     * @param string Action the change constitutes (I = insert, U = update, D = delete)
+     * @param string IP address of the modifier in dot notation
+     * @param string Username of the modifier
+     * @access private
+     */
+    private function insert_changelog($page, $updated_at, $action, $ipaddr, $username) {
+        $page = $this->db->escapeString($page);
+        $updated_at = $this->db->escapeString(date("Y-m-d H:i:s", $updated_at));
+        $username = $this->db->escapeString($username);
+        $ipaddr = $this->db->escapeString($ipaddr);
+        $action = $this->db->escapeString($action);
+        $result = $this->db->exec("INSERT INTO qwiki_changelog (pagename, updated_at, username, user_ip, action) VALUES ('$page', '$updated_at', '$username', '$ipaddr', '$action')");
+        if (!$result) {
+            throw new QwikiException("Error inserting changelog entry to qwiki_changelog table.", QWIKI_ERR_DB);
+        }
+    }
+
+    /**
+     * Remove entry for a page from qwiki_index table
+     * @param string Page name
+     * @access private
+     */
     private function remove_page_info($page) {
         $page = $this->db->escapeString($page);
         $result = $this->db->exec("DELETE FROM qwiki_index WHERE pagename = '$page'");
@@ -678,7 +721,7 @@ class Qwiki {
         $until = new DateTime();
         $until->sub(new DateInterval($interval));
         $untild = $until->format('Y-m-d H:i:s');
-        $sql = "SELECT pagename, modified_at, modified_by, username FROM qwiki_index WHERE modified_at >= '$untild' ORDER BY modified_at DESC";
+        $sql = "SELECT pagename, updated_at, action, username, user_ip FROM qwiki_changelog WHERE updated_at >= '$untild' ORDER BY updated_at DESC";
         $result = $this->db->query($sql);
         if (!$result) {
             throw new QwikiException("Error querying database for recent changes.", QWIKI_ERR_DB);
@@ -694,15 +737,24 @@ class Qwiki {
         if (empty($rc)) {
             $o = "**No changes during interval ".$interval.".**";
         }
+        // Get longest page name
+        $sql = "SELECT MAX(LENGTH(username)) AS max_username FROM qwiki_changelog WHERE updated_at >= '$untild'";
+        $result = $this->db->query($sql);
+        if (!$result) {
+            throw new QwikiException("Error querying database for longest page name/username.", QWIKI_ERR_DB);
+        }
+        $row = $result->fetchArray();
+        $max_username = $row['max_username'] + 4;
         foreach ($rc as $r) {
+            $action = $r['action'];
             $pagename = $r['pagename'];
-            $modified_at = $r['modified_at'];
-            $modified_by = $r['modified_by'];
+            $modified_at = $r['updated_at'];
+            $modified_by = $r['user_ip'];
             $username = $r['username'];
             $time = strtotime($modified_at);
             $ryear = strftime("%G", $time);
             $rmonth = strftime("%B", $time);
-            $rday = strftime("%A, %e.%m.", $time);
+            $rday = strftime("%A, %d.%m.%Y", $time);
             $rtime = date("H:i:s", $time);
             if ($year != $ryear) {
                 $o .= "== $ryear ==\n";
@@ -717,13 +769,13 @@ class Qwiki {
                 $day = $rday;
             }
             if ($username != '' && $modified_by != '') {
-                $o .= "* $rtime $pagename ($username - $modified_by)\n";
+                $o .= "* ''**$action** $rtime ".str_pad($username, $max_username, '.').str_pad($modified_by, 20, '.').$pagename."''\n";
             } elseif ($username == '' && $modified_by != '') {
-                $o .= "* $rtime $pagename ($modified_by)\n";
+                $o .= "* ''**$action** $rtime ".str_pad('//N/A//', $max_username + 4, '.').str_pad($modified_by, 20, '.').$pagename."''\n";
             } elseif ($username != '' && $modified_by == '') {
-                $o .= "* $rtime $pagename ($username)\n";
+                $o .= "* ''**$action** $rtime ".str_pad($username, $max_username, '.').'//N/A//.................'.$pagename."''\n";
             } else {
-                $o .= "* $rtime $pagename\n";
+                $o .= "* ''**$action** $rtime ".str_pad('//N/A//', $max_username + 4, '.').'//N/A//.................'.$pagename."''\n";
             }
         }
         $parser = new WikiParser($o, $this->camelcase_function);
