@@ -30,6 +30,7 @@ pre {
     border: 1px solid darkgrey;
     padding: 15px;
     background-color: lightgrey;
+    overflow-x: scroll;
 }
 
 .diff {
