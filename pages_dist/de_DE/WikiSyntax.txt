@@ -60,6 +60,21 @@ Das hier wird normal angezeigt.
 Das hier wird normal angezeigt.
  Das hier befindet sich in einer grauen Box.
 
+Codeblöcke mit Syntax-Highlighting sind ebenfalls möglich:
+
+ <nowiki>
+```bash
+#!/bin/bash
+tar czf backup.tar.gz *
+```</nowiki>
+
+```bash
+#!/bin/bash
+tar czf backup.tar.gz *
+```
+
+Die unterstützten Sprachen können im Verzeichnis ''includes/geshi/'' gefunden werden.
+
 == Trennlinien ==
 
 Vier oder mehr Striche am Anfang einer Zeile ergeben eine horizontale Linie.

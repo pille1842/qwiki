@@ -63,6 +63,21 @@ This will be displayed the normal way.
 This will be displayed the normal way.
  This will be displayed in a grey box.
 
+You can also use syntax-highlighted codeblocks:
+
+ <nowiki>
+```bash
+#!/bin/bash
+tar czf backup.tar.gz *
+```</nowiki>
+
+```bash
+#!/bin/bash
+tar czf backup.tar.gz *
+```
+
+All the supported languages can be found in ''includes/geshi/''.
+
 == Horizontal lines ==
 
 Four or more dashes at the beginning of a line will make a horizontal line.

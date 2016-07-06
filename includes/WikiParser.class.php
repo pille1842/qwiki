@@ -4,7 +4,7 @@
  * @package Qwiki
  * @copyright 2015 Eric Haberstroh
  * @author Eric Haberstroh <eric@erixpage.de>
- * @version 1.1.1
+ * @version 1.2
  */
 /*  This file is part of Qwiki by Eric Haberstroh <eric@erixpage.de>.
     
@@ -21,6 +21,8 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+
+include_once('geshi.php');
 
 /**
  * Parse QwikiText and produce HTML
@@ -83,7 +85,7 @@ class WikiParser {
         $cell = trim($cell);
         $cell = $this->replaceSpecialChars($cell);
         // find CamelCase words and replace them with the return value of the CamelCase function
-        $cell = preg_replace_callback('/([A-Z][a-z]+){2,}/', $this->camelCaseFunction, $cell);
+        $cell = preg_replace_callback('/([A-ZÄÖÜ][a-zäöüß]+){2,}/', $this->camelCaseFunction, $cell);
         // replace six consecutive apostrophes with nothing
         $cell = str_replace("''''''", '', $cell);
         // replace a colon between two spaces with a medium line
@@ -226,6 +228,10 @@ class WikiParser {
         $inTable = false;
         // Are we in a codeblock?
         $inPre = false;
+        // Are we in a GitHub-style codeblock?
+        $inCodeblock = false;
+        $codeblockSource = "";
+        $codeblockLanguage = "";
         // QwikiText exploded into array
         $arrSource = explode("\n", $op);
         $arrSource[] = "\n";
@@ -235,163 +241,185 @@ class WikiParser {
             $handled = false;
             $arrMatches = array();
             $o = "";
-            // Unordered List
-            if (preg_match('/^(\*)+ /', $l, $arrMatches)) {
-                if ($inParagraph) {
-                    $o .= "</p>";
-                    $inParagraph = false;
-                }
-                while (strlen(trim($arrMatches[0])) > $listDepth) {
-                    $listDepth += 1;
-                    $o .= "<ul>";
-                }
-                while (strlen(trim($arrMatches[0])) < $listDepth) {
-                    $o .= "</ul>";
-                    $listDepth -= 1;
-                }
-                $o .= "<li>" . $this->parseBytewise(preg_replace('/^(\*)+ /', '', $l)) . "</li>";
-                $handled = true;
-            } else {
-                while ($listDepth > 0) {
-                    $o .= "</ul>";
-                    $listDepth -= 1;
-                }
-            }
-            // Ordered List
-            if (preg_match('/^(\#)+ /', $l, $arrMatches)) {
-                if ($inParagraph) {
-                    $o .= "</p>";
-                    $inParagraph = false;
-                }
-                while (strlen(trim($arrMatches[0])) > $olDepth) {
-                    $olDepth += 1;
-                    $o .= "<ol>";
-                }
-                while (strlen(trim($arrMatches[0])) < $olDepth) {
-                    $o .= "</ol>";
-                    $olDepth -= 1;
-                }
-                $o .= "<li>" . $this->parseBytewise(preg_replace('/^(\#)+ /', '', $l)) . "</li>";
-                $handled = true;
-            } else {
-                while ($olDepth > 0) {
-                    $o .= "</ol>";
-                    $olDepth -= 1;
-                }
-            }
-            // Quotes (indentation with one or more >)
-            if (preg_match('/^(\>)+/', $l, $arrMatches)) {
-                if ($inParagraph) {
-                    $o .= "</p>";
-                    $inParagraph = false;
-                }
-                while (strlen($arrMatches[0]) > $quoteDepth) {
-                    $quoteDepth += 1;
-                    $o .= '<div style="margin-left:1em;">';
-                }
-                while (strlen($arrMatches[0]) < $quoteDepth) {
-                    $o .= "</div>";
-                    $quoteDepth -= 1;
-                }
-                $o .= $this->parseBytewise(preg_replace('/^(\>)+/', '', $l));
-                $handled = true;
-            } else {
-                while ($quoteDepth > 0) {
-                    $o .= "</div>";
-                    $quoteDepth -= 1;
-                }
-            }
-            // Table (normal row)
-            if (preg_match('/^\|\|/', $l)) {
-                if ($inParagraph) {
-                    $o .= "</p>";
-                    $inParagraph = false;
-                }
-                if ($inTable == false) {
-                    $o .= "<table>";
-                    $inTable = true;
-                }
-                $o .= "<tr>";
-                $arrLine = explode("||", preg_replace("/^\|\|/", "", $l));
-                foreach ($arrLine as $cell) {
-                    $o .= "<td>" . $this->parseBytewise(preg_replace("/\|\|/", "", $cell)) . "</td>";
-                }
-                $o .= "</tr>";
-                $handled = true;
-            } else {
-                if ($inTable && !preg_match('/^\^\^/', $l)) {
-                    $o .= "</table>";
-                    $inTable = false;
-                }
-            }
-            // Table (head row)
-            if (preg_match('/^\^\^/', $l)) {
-                if ($inParagraph) {
-                    $o .= "</p>";
-                    $inParagraph = false;
-                }
-                if ($inTable == false) {
-                    $o .= "<table>";
-                    $inTable = true;
-                }
-                $o .= "<tr>";
-                $arrLine = explode("^^", preg_replace("/^\^\^/", "", $l));
-                foreach ($arrLine as $cell) {
-                    $o .= "<th>" . $this->parseBytewise(preg_replace("/\^\^/", "", $cell)) . "</th>";
-                }
-                $o .= "</tr>";
-                $handled = true;
-            } else {
-                if ($inTable && !preg_match('/^\|\|/', $l)) {
-                    $o .= "</table>";
-                    $inTable = false;
-                }
-            }
-            // Codeblock
-            if (preg_match('/^( )+/', $l)) {
-                if ($inParagraph) {
-                    $o .= "</p>";
-                    $inParagraph = false;
-                }
-                if ($inPre) {
-                    $o .= preg_replace('/^( )/', '', $this->replaceSpecialChars($l));
-                } else {
-                    $o .= "<pre>" . preg_replace('/^( )/', '', $this->replaceSpecialChars($l));
-                    $inPre = true;
-                }
-                $handled = true;
-            } else {
-                if ($inPre) {
-                    $o .= "</pre>";
-                    $inPre = false;
-                }
-            }
-            // horizontal line (----)
-            if (preg_match('/^(\-){4,}((.?)+)$/', $l, $match)) {
-                if ($inParagraph) {
-                    $o .= "</p>";
-                    $inParagraph = false;
-                }
-                $o .= "<hr>\n" . $this->parseBytewise($match[2]);
-                $handled = true;
-            }
-            // everything else
-            if (!$handled) {
-                if (trim($l) != '') {
-                    if (!$inParagraph) {
-                        $o .= "<p>";
-                        $inParagraph = true;
-                    }
-                    $o .= $this->parseBytewise($l);
-                } else {
+            if (!$inCodeblock || ($inCodeblock && preg_match('/^```$/', $l, $match))) {
+                // Unordered List
+                if (preg_match('/^(\*)+ /', $l, $arrMatches)) {
                     if ($inParagraph) {
                         $o .= "</p>";
                         $inParagraph = false;
                     }
+                    while (strlen(trim($arrMatches[0])) > $listDepth) {
+                        $listDepth += 1;
+                        $o .= "<ul>";
+                    }
+                    while (strlen(trim($arrMatches[0])) < $listDepth) {
+                        $o .= "</ul>";
+                        $listDepth -= 1;
+                    }
+                    $o .= "<li>" . $this->parseBytewise(preg_replace('/^(\*)+ /', '', $l)) . "</li>";
+                    $handled = true;
+                } else {
+                    while ($listDepth > 0) {
+                        $o .= "</ul>";
+                        $listDepth -= 1;
+                    }
                 }
+                // Ordered List
+                if (preg_match('/^(\#)+ /', $l, $arrMatches)) {
+                    if ($inParagraph) {
+                        $o .= "</p>";
+                        $inParagraph = false;
+                    }
+                    while (strlen(trim($arrMatches[0])) > $olDepth) {
+                        $olDepth += 1;
+                        $o .= "<ol>";
+                    }
+                    while (strlen(trim($arrMatches[0])) < $olDepth) {
+                        $o .= "</ol>";
+                        $olDepth -= 1;
+                    }
+                    $o .= "<li>" . $this->parseBytewise(preg_replace('/^(\#)+ /', '', $l)) . "</li>";
+                    $handled = true;
+                } else {
+                    while ($olDepth > 0) {
+                        $o .= "</ol>";
+                        $olDepth -= 1;
+                    }
+                }
+                // Quotes (indentation with one or more >)
+                if (preg_match('/^(\>)+/', $l, $arrMatches)) {
+                    if ($inParagraph) {
+                        $o .= "</p>";
+                        $inParagraph = false;
+                    }
+                    while (strlen($arrMatches[0]) > $quoteDepth) {
+                        $quoteDepth += 1;
+                        $o .= '<div style="margin-left:1em;">';
+                    }
+                    while (strlen($arrMatches[0]) < $quoteDepth) {
+                        $o .= "</div>";
+                        $quoteDepth -= 1;
+                    }
+                    $o .= $this->parseBytewise(preg_replace('/^(\>)+/', '', $l));
+                    $handled = true;
+                } else {
+                    while ($quoteDepth > 0) {
+                        $o .= "</div>";
+                        $quoteDepth -= 1;
+                    }
+                }
+                // Table (normal row)
+                if (preg_match('/^\|\|/', $l)) {
+                    if ($inParagraph) {
+                        $o .= "</p>";
+                        $inParagraph = false;
+                    }
+                    if ($inTable == false) {
+                        $o .= "<table>";
+                        $inTable = true;
+                    }
+                    $o .= "<tr>";
+                    $arrLine = explode("||", preg_replace("/^\|\|/", "", $l));
+                    foreach ($arrLine as $cell) {
+                        $o .= "<td>" . $this->parseBytewise(preg_replace("/\|\|/", "", $cell)) . "</td>";
+                    }
+                    $o .= "</tr>";
+                    $handled = true;
+                } else {
+                    if ($inTable && !preg_match('/^\^\^/', $l)) {
+                        $o .= "</table>";
+                        $inTable = false;
+                    }
+                }
+                // Table (head row)
+                if (preg_match('/^\^\^/', $l)) {
+                    if ($inParagraph) {
+                        $o .= "</p>";
+                        $inParagraph = false;
+                    }
+                    if ($inTable == false) {
+                        $o .= "<table>";
+                        $inTable = true;
+                    }
+                    $o .= "<tr>";
+                    $arrLine = explode("^^", preg_replace("/^\^\^/", "", $l));
+                    foreach ($arrLine as $cell) {
+                        $o .= "<th>" . $this->parseBytewise(preg_replace("/\^\^/", "", $cell)) . "</th>";
+                    }
+                    $o .= "</tr>";
+                    $handled = true;
+                } else {
+                    if ($inTable && !preg_match('/^\|\|/', $l)) {
+                        $o .= "</table>";
+                        $inTable = false;
+                    }
+                }
+                // Codeblock
+                if (preg_match('/^( )+/', $l)) {
+                    if ($inParagraph) {
+                        $o .= "</p>";
+                        $inParagraph = false;
+                    }
+                    if ($inPre) {
+                        $o .= preg_replace('/^( )/', '', $this->replaceSpecialChars($l));
+                    } else {
+                        $o .= "<pre>" . preg_replace('/^( )/', '', $this->replaceSpecialChars($l));
+                        $inPre = true;
+                    }
+                    $handled = true;
+                } else {
+                    if ($inPre) {
+                        $o .= "</pre>";
+                        $inPre = false;
+                    }
+                }
+                // horizontal line (----)
+                if (preg_match('/^(\-){4,}((.?)+)$/', $l, $match)) {
+                    if ($inParagraph) {
+                        $o .= "</p>";
+                        $inParagraph = false;
+                    }
+                    $o .= "<hr>\n" . $this->parseBytewise($match[2]);
+                    $handled = true;
+                }
+                // GitHub-style codeblock (```)
+                if (preg_match('/^```(.*?)$/', $l, $match)) {
+                    if ($inParagraph) {
+                        $o .= "</p>";
+                        $inParagraph = false;
+                    }
+                    if ($inCodeblock) {
+                        $codeblockSource = rtrim($codeblockSource);
+                        $geshi = new GeSHi($codeblockSource, $codeblockLanguage);
+                        $o .= $geshi->parse_code();
+                        $inCodeblock = false;
+                    } else {
+                        $inCodeblock = true;
+                        $codeblockLanguage = $match[1];
+                        $codeblockSource = "";
+                    }
+                    $handled = true;
+                }
+                // everything else
+                if (!$handled) {
+                    if (trim($l) != '') {
+                        if (!$inParagraph) {
+                            $o .= "<p>";
+                            $inParagraph = true;
+                        }
+                        $o .= $this->parseBytewise($l);
+                    } else {
+                        if ($inParagraph) {
+                            $o .= "</p>";
+                            $inParagraph = false;
+                        }
+                    }
+                }
+                // save output
+                $arrOutput[] = $o;
+            } else {
+                $codeblockSource .= $l . "\n";
             }
-            // save output
-            $arrOutput[] = $o;
         }
         if ($inParagraph) {
             $arrOutput[] = "</p>";
