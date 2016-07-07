@@ -2,7 +2,7 @@
 /**
  * This file contains the WikiParser class
  * @package Qwiki
- * @copyright 2015 Eric Haberstroh
+ * @copyright 2015, 2016 Eric Haberstroh
  * @author Eric Haberstroh <eric@erixpage.de>
  * @version 1.2
  */
@@ -22,7 +22,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-include_once('geshi.php');
+include_once(QWIKI_HTDOCS . 'includes/geshi.php');
 
 /**
  * Parse QwikiText and produce HTML
@@ -85,7 +85,7 @@ class WikiParser {
         $cell = trim($cell);
         $cell = $this->replaceSpecialChars($cell);
         // find CamelCase words and replace them with the return value of the CamelCase function
-        $cell = preg_replace_callback('/([A-ZÄÖÜ][a-zäöüß]+){2,}/', $this->camelCaseFunction, $cell);
+        $cell = preg_replace_callback('/([A-Z][a-z]+){2,}/', $this->camelCaseFunction, $cell);
         // replace six consecutive apostrophes with nothing
         $cell = str_replace("''''''", '', $cell);
         // replace a colon between two spaces with a medium line
@@ -241,7 +241,7 @@ class WikiParser {
             $handled = false;
             $arrMatches = array();
             $o = "";
-            if (!$inCodeblock || ($inCodeblock && preg_match('/^```$/', $l, $match))) {
+            if (!$inCodeblock) {
                 // Unordered List
                 if (preg_match('/^(\*)+ /', $l, $arrMatches)) {
                     if ($inParagraph) {
@@ -383,21 +383,14 @@ class WikiParser {
                     $handled = true;
                 }
                 // GitHub-style codeblock (```)
-                if (preg_match('/^```(.*?)$/', $l, $match)) {
+                if (preg_match('/^```(.*)$/', $l, $match)) {
                     if ($inParagraph) {
                         $o .= "</p>";
                         $inParagraph = false;
                     }
-                    if ($inCodeblock) {
-                        $codeblockSource = rtrim($codeblockSource);
-                        $geshi = new GeSHi($codeblockSource, $codeblockLanguage);
-                        $o .= $geshi->parse_code();
-                        $inCodeblock = false;
-                    } else {
-                        $inCodeblock = true;
-                        $codeblockLanguage = $match[1];
-                        $codeblockSource = "";
-                    }
+                    $inCodeblock = true;
+                    $codeblockLanguage = $match[1];
+                    $codeblockSource = "";
                     $handled = true;
                 }
                 // everything else
@@ -417,6 +410,13 @@ class WikiParser {
                 }
                 // save output
                 $arrOutput[] = $o;
+            } elseif ($inCodeblock && preg_match('/^```/', $l, $match)) {
+                $inCodeblock = false;
+                $codeblockSource = rtrim($codeblockSource);
+                $geshi = new GeSHi($codeblockSource, $codeblockLanguage);
+                $arrOutput[] = $geshi->parse_code();
+                $codeblockSource = "";
+                $codeblockLanguage = "";
             } else {
                 $codeblockSource .= $l . "\n";
             }

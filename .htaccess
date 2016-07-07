@@ -4,6 +4,6 @@ RewriteBase /
 RewriteRule ^index\.php$ - [L]
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^(([A-ZÄÖÜ][a-zäöüß]+){2,})/(view|edit|preview|save|diff|search)$ index.php?page=$1&action=$3 [L]
-RewriteRule ^(([A-ZÄÖÜ][a-zäöüß]+){2,})/?$ index.php?page=$1 [L]
+RewriteRule ^(([A-Z][a-z]+){2,})/(view|edit|preview|save|diff|search)$ index.php?page=$1&action=$3 [L]
+RewriteRule ^(([A-Z][a-z]+){2,})/?$ index.php?page=$1 [L]
 </IfModule>
