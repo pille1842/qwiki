@@ -4,7 +4,7 @@
  * @package Qwiki
  * @copyright 2015, 2016 Eric Haberstroh
  * @author Eric Haberstroh <eric@erixpage.de>
- * @version 1.2
+ * @version 1.3
  */
 /*  This file is part of Qwiki by Eric Haberstroh <eric@erixpage.de>.
     
@@ -155,6 +155,22 @@ class WikiParser {
                 // transform image links into <img> tags
                 } elseif (preg_match('!http://([a-z0-9\-\.\/\_]+\.(?:jpe?g|png|gif))!Ui', $url, $matches)) {
                     $op = str_replace($md5, '<img src="'.$url.'" alt="'.basename($url).'">', $op);
+                // transform audio links into <audio> tags
+                } elseif (preg_match('!http://[a-z0-9\-\.\/\_]+\.((?:mp3|ogg|wav))!Ui', $url, $matches)) {
+                    switch ($matches[1]) {
+                        case 'mp3':
+                            $type = 'audio/mpeg';
+                            break;
+                        case 'ogg':
+                            $type = 'audio/ogg';
+                            break;
+                        case 'wav':
+                            $type = 'audio/wav';
+                            break;
+                        default:
+                            $type = '';
+                    }
+                    $op = str_replace($md5, '<audio controls><source src="'.$url.'" type="'.$type.'"></audio>', $op);
                 // link normal URLs with <a>
                 } else {
                     $op = str_replace($md5, '<a href="'.$url.'">'.$url.'</a>', $op);
