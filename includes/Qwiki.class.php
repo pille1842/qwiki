@@ -2,9 +2,9 @@
 /**
  * This file contains the main Qwiki class
  * @package Qwiki
- * @copyright 2015 Eric Haberstroh
+ * @copyright 2015, 2016 Eric Haberstroh
  * @author Eric Haberstroh <eric@erixpage.de>
- * @version 2.2
+ * @version 2.2.1
  */
 /*  This file is part of Qwiki by Eric Haberstroh <eric@erixpage.de>.
 
@@ -28,7 +28,7 @@ if (!defined('QWIKI_EXEC')) {
 /**
  * This version of Qwiki
  */
-define('QWIKI_VERSION', '2.2');
+define('QWIKI_VERSION', '2.2.1');
 
 /**
  * This exception code is used when the constructor parameters are not
@@ -340,7 +340,7 @@ class Qwiki {
             } else {
                 $this->smarty->assign('content', $this->page_html($page));
             }
-            $this->smarty->assign('pagemodtime', strftime("%c", Qwiki::page_mtime($page)));
+            $this->smarty->assign('pagemodtime', utf8_encode(strftime("%c", Qwiki::page_mtime($page))));
             $this->smarty->assign('backupexists', Qwiki::backup_exists($page));
         } else {
             $this->smarty->assign('template', 'view.tpl');
@@ -348,7 +348,7 @@ class Qwiki {
             $this->smarty->assign('page', $page);
             $this->smarty->assign('error', 'page_not_found');
             $this->smarty->assign('content', $this->page_html(QWIKI_ERRORPAGE));
-            $this->smarty->assign('pagemodtime', strftime("%c"));
+            $this->smarty->assign('pagemodtime', utf8_encode(strftime("%c")));
         }
         $this->smarty->display('index.tpl');
     }
